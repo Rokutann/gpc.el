@@ -1,4 +1,4 @@
-;;; elcache.el --- A cache fascility.                -*- lexical-binding: t; -*-
+;;; el-cache.el --- A cache fascility.                -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Cyriakus "Mukuge" Hill
 
@@ -26,5 +26,5 @@
 
 
 
-(provide 'elcache)
-;;; elcache.el ends here
+(provide 'el-cache)
+;;; el-cache.el ends here

@@ -2,6 +2,7 @@
 
 (require 'ert)
 (require 'f)
+(require 's)
 
 (load (f-expand "gcache.el" default-directory))
 
@@ -14,10 +15,11 @@
 (defun setup-defcache-spec ()
   (gcache-defcache-spec acache-spec
     "A new cache spec."
-    '((current-buffer-name "*scratch*" '(lambda () (buffer-name (current-buffer))))
-      (pwd "/" '(lambda () (with-temp-buffer
-                        (call-process "pwd" nil t)
-                        (buffer-string))))
+    '((current-buffer-name "*scratch*" (lambda () (buffer-name (current-buffer))))
+      (pwd "/" (lambda ()
+                 (with-temp-buffer
+                   (call-process "pwd" nil t)
+                   (s-chop-suffix "\n" (buffer-string)))))
       (true nil a-retriever)))
   (defvar a-random-var nil))
 
@@ -60,7 +62,8 @@
   (gcache-set-default-content g-cache)
   (should (equal (gcache-fetch 'pwd g-cache) "/"))
   (gcache-clear g-cache)
-  (should (eq (gcache-fetch 'pwd g-cache) 'no-value)))
+  (should (equal (s-chop-suffix "/" (gcache-fetch 'pwd g-cache))
+                 (s-chop-suffix "/" (f-expand default-directory)))))
 
 (ert-deftest test-gcache-defcache ()
   (setup-defcache-spec)

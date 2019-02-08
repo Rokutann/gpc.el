@@ -101,13 +101,15 @@ A cache is an alist with this structure:
   ;; alist version.
   `(setq ,symbol nil))
 
-(defun gcache-fetch (key cache)
+(defmacro gcache-fetch (key cache)
   "Return the value of KEY in CACHE."
-  (let ((value (cdr (assoc key cache))))
-    (if value
-        value
-      (push (cons key 'no-value) cache)
-      'no-value)))
+  `(let ((value (cdr (assoc ,key ,cache))))
+     (if value
+         value
+       (let ((new-value (funcall
+                         (gcache--get-retrieve-fun ,key ,cache))))
+         (push (cons ,key new-value) ,cache)
+         new-value))))
 
 (defmacro gcache--get-retrieve-fun (key cache)
   "Get the retrieve function for KEY in CACHE."

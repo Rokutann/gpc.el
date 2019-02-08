@@ -29,7 +29,23 @@
 
 (require 'cl-lib)
 
-(cl-defmacro defcache (symbol &key buffer-local docstring)
+(defmacro gcache-defcache-spec (symbol doc-string spec)
+  "Define a cache SPEC with DOC-STRING, and return SYMBOL."
+  `(prog1
+       (defvar ,symbol nil ,doc-string)
+     (put ',symbol 'gcache-cache-spec ',symbol)
+     (setq ,symbol (make-hash-table))
+     (mapcar #'(lambda (entry)
+                 (puthash (car entry) (cdr entry) ,symbol))
+             ,spec)))
+
+(defmacro gcache-cache-spec-p (symbol)
+  "Return t if SYMBOL is a cache spec, otherwise nil."
+  `(if (get ',symbol 'gcache-cache-spec)
+       t
+     nil))
+
+(cl-defmacro defcache (symbol &key buffer-local doc-string)
   "Define SYMBOL as a cache, and return SYMBOL.
 
 The new cache is automatically-buffer-local when BUFFER-LOCAL is
@@ -38,7 +54,7 @@ non-nil, otherwise global.
 A cache is an alist with this structure:
 (('a-cache-entry value . fetch-fucntion)"
   `(prog1
-       (defvar ,symbol nil ,docstring)
+       (defvar ,symbol nil ,doc-string)
      (when ,buffer-local
        (make-variable-buffer-local ',symbol))))
 

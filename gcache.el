@@ -1,4 +1,4 @@
-;;; cache.el --- A cache fascility.                -*- lexical-binding: t; -*-
+;;; gcache.el --- A general purpose cache fascility.   -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Cyriakus "Mukuge" Hill
 
@@ -7,7 +7,6 @@
 ;; Keywords: lisp
 ;; Package-Version: 0.0.1
 ;; Package-Requires: ((emacs "26.1"))
-
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -24,7 +23,7 @@
 
 ;;; Commentary:
 
-;; A cache fascility for Emaacs.
+;; A general purpose cache fascility for Emaacs.
 
 ;;; Code:
 
@@ -43,28 +42,28 @@ A cache is an alist with this structure:
      (when ,buffer-local
        (make-variable-buffer-local ',symbol))))
 
-(defun cache-exist-p (entry cache)
+(defun gcache-exist-p (entry cache)
   "Return t if CACHE has ENTRY, otherwise nil.
 
 ENTRY should be a symbol."
   (if (assq entry cache) t nil))
 
-(defmacro cache-add (entry fetch-fun cache)
+(defmacro gcache-add (entry fetch-fun cache)
   "Add ENTRY to CACHE with FETCH-FUN, and return ENTRY."
-  `(unless (cache-exist-p ',entry ,cache )
+  `(unless (gcache-exist-p ',entry ,cache )
      (setq ,cache
            (push (cons ',entry '(nil ,fetch-fun)) ,cache))
      ',entry))
 
-(defun cache-remove (entry cache)
+(defun gcache-remove (entry cache)
   "Remove ENTRY from CACHE.
 
 Return t if ENTRY exists, othewise nil."
   )
 
-(defun cache--dump (cache)
+(defun gcache--dump (cache)
   "Dump CACHE in minibuffer."
   (message (pp cache)))
 
-(provide 'cache)
-;;; cache.el ends here
+(provide 'gcache)
+;;; gcache.el ends here

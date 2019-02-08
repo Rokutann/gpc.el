@@ -1,9 +1,9 @@
-;;; cache-test.el --- Tests for cache
+;;; gcache-test.el --- Tests for gcache
 
 (require 'ert)
 (require 'f)
 
-(load (f-expand "cache.el" default-directory))
+(load (f-expand "gcache.el" default-directory))
 
 (defun setup ()
   (defcache g-cache :docstring "a global cache.")
@@ -23,12 +23,12 @@
 
 (ert-deftest test-exist-p ()
   (setup)
-  (should (eq (cache-exist-p 'a-cache-entry g-cache) nil))
-  (should (eq (cache-add a-cache-entry #'(lambda (x) x) g-cache) 'a-cache-entry))
-  (should (eq (cache-exist-p 'a-cache-entry g-cache) t)))
+  (should (eq (gcache-exist-p 'a-cache-entry g-cache) nil))
+  (should (eq (gcache-add a-cache-entry #'(lambda (x) x) g-cache) 'a-cache-entry))
+  (should (eq (gcache-exist-p 'a-cache-entry g-cache) t)))
 
 ;; Local Variables:
 ;; flycheck-disabled-checkers: (emacs-lisp-checkdoc)
 ;; End:
 
-;;; cache-test.el ends here
+;;; gcache-test.el ends here

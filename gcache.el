@@ -73,9 +73,18 @@ A cache is an alist with this structure:
        (defvar ,symbol nil ,doc-string)
      (gcache--copy-symbol-property 'gcache-cache-spec ',cache-spec ',symbol)
      (gcache--initialize-storage ,symbol)
-     (gcache--set-default-content ,cache-spec ,symbol)
      (when ,buffer-local
-       (make-variable-buffer-local ',symbol))))
+       (make-variable-buffer-local ',symbol))
+     ))
+
+(defmacro gcache-set-default-content (cache)
+  "Set the default content for CACHE from CACHE-SPEC."
+  `(setq ,cache (gcache--make-alist-from-key-and-value0
+                 (gcache-get-cache-spec ,cache))))
+
+(defmacro gcache-get-cache-spec (cache)
+  "Get the cache spec of CACHE."
+  `(symbol-value (get ',cache 'gcache-cache-spec)))
 
 (defmacro gcache--set-default-content (cache-spec cache)
   "Set the default content for CACHE from CACHE-SPEC."
@@ -91,10 +100,6 @@ A cache is an alist with this structure:
   ;;`(setq ,symbol (make-hash-table))
   ;; alist version.
   `(setq ,symbol nil))
-
-;; (defun gcache-fetch (key cache)
-;;   "Return the value of KEY in CACHE."
-;;   (cdr (assoc key cache)))
 
 (defun gcache-fetch (key cache)
   "Return the value of KEY in CACHE."
@@ -152,8 +157,7 @@ All of the values of the keys are set to 'no-value."
   "Make and return an alist from keys and value0 of HASH."
   (let ((res nil))
     (maphash #'(lambda (key value)
-                 (push (cons key (nth 0 value))
-                       res))
+                 (push (cons key (nth 0 value)) res))
              hash)
     res))
 

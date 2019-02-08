@@ -51,11 +51,13 @@
 
 (ert-deftest test-gcache-exist-p ()
   (setup-gcache-defcache)
+  (gcache-set-default-content g-cache)
   (should (eq (gcache-exist-p 'spam g-cache) nil))
   (should (eq (gcache-exist-p 'pwd g-cache) t)))
 
 (ert-deftest test-gcache-fetch ()
   (setup-gcache-defcache)
+  (gcache-set-default-content g-cache)
   (should (equal (gcache-fetch 'pwd g-cache) "/"))
   (gcache-clear g-cache)
   (should (eq (gcache-fetch 'pwd g-cache) 'no-value)))
@@ -71,7 +73,7 @@
   ;;                "/"))
   ;; (should (equal (gethash 'pwd acache)
   ;;                "/"))
-  (should (equal (gcache-fetch 'pwd acache) "/"))
+  ;;(should (equal (gcache-fetch 'pwd acache) "/"))
   )
 
 (ert-deftest test-gcache-clear ()
@@ -83,6 +85,17 @@
   (setup-gcache-defcache)
   (should (eq (gcache--get-retrieve-fun 'true g-cache)
               'a-retriever)))
+
+(ert-deftest test-gcache-cache-spec ()
+  (setup-gcache-defcache)
+  (should (equal (gcache-get-cache-spec g-cache)
+                 acache-spec)))
+
+(ert-deftest test-gcache-set-default-content ()
+  (setup-gcache-defcache)
+  (gcache-set-default-content g-cache)
+  (should (equal (gcache-fetch 'pwd g-cache)
+                 "/")))
 
 
 ;;; Tests for helper functions.

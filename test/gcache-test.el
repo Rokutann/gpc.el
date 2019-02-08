@@ -5,9 +5,8 @@
 
 (load (f-expand "gcache.el" default-directory))
 
-(defun setup-defchache ()
-  (defcache g-cache :doc-string "a global cache.")
-  (defcache l-cache :buffer-local t :doc-string "a buffer-local cache."))
+
+;;; Setup functions.
 
 (defun setup-defcache-spec ()
   (gcache-defcache-spec acache-spec
@@ -18,23 +17,8 @@
                         (buffer-string))))))
   (defvar a-random-var nil))
 
-(ert-deftest test-defcache-buffer-local ()
-  (setup-defchache)
-  (should (eq (local-variable-if-set-p 'g-cache) nil))
-  (should (eq (local-variable-if-set-p 'l-cache) t)))
 
-(ert-deftest test-defcache-docstring ()
-  (setup-defchache)
-  (should (equal (documentation-property 'g-cache 'variable-documentation)
-                 "a global cache."))
-  (should (equal (documentation-property 'l-cache 'variable-documentation)
-                 "a buffer-local cache.")))
-
-(ert-deftest test-exist-p ()
-  (setup-defchache)
-  (should (eq (gcache-exist-p 'a-cache-entry g-cache) nil))
-  (should (eq (gcache-add a-cache-entry #'(lambda (x) x) g-cache) 'a-cache-entry))
-  (should (eq (gcache-exist-p 'a-cache-entry g-cache) t)))
+;;; Tests.
 
 (ert-deftest test-def-cache-spec ()
   (setup-defcache-spec)
@@ -44,12 +28,87 @@
   (should (equal (nth 0 (gethash 'current-buffer-name acache-spec)) "*scratch*"))
   (should (equal (nth 0 (gethash 'pwd acache-spec)) "/")))
 
+(defun setup-gcache-defchache ()
+  (setup-defcache-spec)
+  (gcache-defcache g-cache acache-spec :doc-string "a global cache.")
+  (gcache-defcache l-cache acache-spec :buffer-local t :doc-string "a buffer-local cache."))
+
+(ert-deftest test-gcache-defcache-buffer-local ()
+  (setup-gcache-defchache)
+  (should (eq (local-variable-if-set-p 'g-cache) nil))
+  (should (eq (local-variable-if-set-p 'l-cache) t)))
+
+(ert-deftest test-gcache-defcache-docstring ()
+  (setup-gcache-defchache)
+  (should (equal (documentation-property 'g-cache 'variable-documentation)
+                 "a global cache."))
+  (should (equal (documentation-property 'l-cache 'variable-documentation)
+                 "a buffer-local cache.")))
+
+(ert-deftest test-gcache-exist-p ()
+  (setup-gcache-defchache)
+  (should (eq (gcache-exist-p 'spam g-cache) nil))
+  (should (eq (gcache-exist-p 'pwd g-cache) t)))
+
+(ert-deftest test-gcache-defcache ()
+  (setup-defcache-spec)
+  (gcache-defcache acache acache-spec)
+  ;; (should (eq (hash-table-p acache)
+  ;;             t))
+  (should (eq (get 'acache 'gcache-cache-spec)
+              'acache-spec))
+  ;; (should (equal (gethash 'pwd acache)
+  ;;                "/"))
+  ;; (should (equal (gethash 'pwd acache)
+  ;;                "/"))
+  (should (equal (gcache-fetch 'pwd acache) "/"))
+  )
+
+
+;;; Tests for helper functions.
+
 (ert-deftest test-gcache--copy-symbol-property ()
   (setq symbol-a 1)
   (setq symbol-b 2)
   (put 'symbol-a 'name 'value)
   (should (eq (gcache--copy-symbol-property 'name 'symbol-a 'symbol-b)
               'value)))
+
+(ert-deftest test-gcache--copy-keys-and-value-0 ()
+  (setq hash-a (make-hash-table))
+  (setq hash-b (make-hash-table))
+  (puthash 'a '(1 10) hash-a)
+  (puthash 'b '(2 20) hash-a)
+  (gcache--copy-keys-and-value-0 hash-a hash-b)
+  (should (eq (gethash 'a hash-b)
+              1))
+  (should (eq (gethash 'b hash-b)
+              2))
+  (should (eq (gethash 'c hash-b)
+              nil))
+  )
+
+
+(ert-deftest test-gcache--make-alist-from-key-and-value0 ()
+  (setq hash-a (make-hash-table))
+  (puthash 'a '(1 10) hash-a)
+  (puthash 'b '(2 20) hash-a)
+  (should (alist-equal
+           (gcache--make-alist-from-key-and-value0 hash-a)
+           '((a . 1) (b . 2))))
+  )
+
+
+;;; Tests for test helper functions.
+
+(ert-deftest test-is-subset-alist-of ()
+  (should (eq (is-subset-alist-of '((a . 1)) '((b . 2) (a . 1)))
+              t)))
+
+(ert-deftest test-alist-equal ()
+  (should (eq (alist-equal '((a . 1) (b . 2))
+                           '((b . 2) (a . 1)))
+              t)))
 
 (ert-deftest test-is-subset-hash-of ()
   (setq hash-a (make-hash-table))
@@ -92,51 +151,6 @@
               t))
   )
 
-(ert-deftest test-gcache--copy-keys-and-value-0 ()
-  (setq hash-a (make-hash-table))
-  (setq hash-b (make-hash-table))
-  (puthash 'a '(1 10) hash-a)
-  (puthash 'b '(2 20) hash-a)
-  (gcache--copy-keys-and-value-0 hash-a hash-b)
-  (should (eq (gethash 'a hash-b)
-              1))
-  (should (eq (gethash 'b hash-b)
-              2))
-  (should (eq (gethash 'c hash-b)
-              nil))
-  )
-
-(ert-deftest test-gcache-defcache ()
-  (setup-defcache-spec)
-  (gcache-defcache acache acache-spec)
-  ;; (should (eq (hash-table-p acache)
-  ;;             t))
-  (should (eq (get 'acache 'gcache-cache-spec)
-              'acache-spec))
-  ;; (should (equal (gethash 'pwd acache)
-  ;;                "/"))
-  ;; (should (equal (gethash 'pwd acache)
-  ;;                "/"))
-  (should (equal (gcache-fetch 'pwd acache) "/"))
-  )
-
-(ert-deftest test-gcache--make-alist-from-key-and-value0 ()
-  (setq hash-a (make-hash-table))
-  (puthash 'a '(1 10) hash-a)
-  (puthash 'b '(2 20) hash-a)
-  (should (alist-equal
-           (gcache--make-alist-from-key-and-value0 hash-a)
-           '((a . 1) (b . 2))))
-  )
-
-(ert-deftest test-is-subset-alist-of ()
-  (should (eq (is-subset-alist-of '((a . 1)) '((b . 2) (a . 1)))
-              t)))
-
-(ert-deftest test-alist-equal ()
-  (should (eq (alist-equal '((a . 1) (b . 2))
-                           '((b . 2) (a . 1)))
-              t)))
 
 
 ;; Local Variables:

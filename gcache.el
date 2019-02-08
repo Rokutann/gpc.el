@@ -29,11 +29,13 @@
 
 (require 'cl-lib)
 
+;;; Core functions.
+
 (defmacro gcache-defcache-spec (symbol doc-string spec)
   "Define a cache SPEC with DOC-STRING, and return SYMBOL.
 
-This macro stores a marker in the property list of the SYMBOL. The format
-is '(gcache-cache spec . SYMBOL) .
+This macro stores a marker in the property list of the
+SYMBOL.  The format is '(gcache-cache spec . SYMBOL) .
 
 SPEC should be a list of cache entry definitions, which is a list
 of a cash entry, a default value, a retrieve function.
@@ -42,8 +44,7 @@ Example:
 '((current-buffer-name \"*scratch*\" '(lambda () (buffer-name (current-buffer))))
                           (pwd \"/\" '(lambda () (with-temp-buffer
                                             (call-process \"pwd\" nil t)
-                                            (buffer-string)))))
-"
+                                            (buffer-string)))))"
   (declare (indent 1))
   `(prog1
        (defvar ,symbol nil ,doc-string)
@@ -60,19 +61,6 @@ Example:
        t
      nil))
 
-(defun gcache--copy-symbol-property (propname from-symbol to-symbol)
-  "Copy a property named PROPNAME from FROM-SYMBOL to TO-SYMBOL."
-  (put to-symbol propname
-       (get from-symbol propname)))
-
-(defun gcache--copy-keys-and-value-0 (from-cache to-cache)
-  "Copy all keys from FROM-CACHE to TO-CACHE.
-
-All of the values of the keys are set to 'no-value."
-  (maphash #'(lambda (key value)
-               (puthash key (nth 0 value) to-cache))
-           from-cache))
-
 (cl-defmacro gcache-defcache (symbol cache-spec &key buffer-local doc-string)
   "Define SYMBOL as a cache based on CASHE-SPEC, and return SYMBOL.
 
@@ -84,47 +72,30 @@ A cache is an alist with this structure:
   `(prog1
        (defvar ,symbol nil ,doc-string)
      (gcache--copy-symbol-property 'gcache-cache-spec ',cache-spec ',symbol)
-     (setq ,symbol (gcache--initialize-storage))
-     (if (hash-table-p ,symbol)
-         (gcache--copy-keys-and-value-0 ,cache-spec ,symbol)
-       (setq ,symbol (gcache--make-alist-from-key-and-value0 ,cache-spec)))
+     (gcache--initialize-storage ,symbol)
+     (gcache--set-default-content ,cache-spec ,symbol)
      (when ,buffer-local
        (make-variable-buffer-local ',symbol))))
 
-(defun gcache--make-alist-from-key-and-value0 (hash)
-  "Make and return an alist from keys and value0 of HASH."
-  (let ((res nil))
-    (maphash #'(lambda (key value)
-                 (push (cons key (nth 0 value))
-                       res))
-             hash)
-    res))
+(defmacro gcache--set-default-content (cache-spec cache)
+  "Set the default content for CACHE from CACHE-SPEC."
+  `(if (hash-table-p ,cache)
+       ;; hash version
+       (gcache--copy-keys-and-value-0 ,cache-spec ,cache)
+     ;; alist version
+     (setq ,cache (gcache--make-alist-from-key-and-value0 ,cache-spec))))
 
-(defun gcache--initialize-storage ()
-  "Initialize a storage for a cache."
-  ;; For a hash version
-  ;;(make-hash-table)
-  ;; For an alist version
-  nil
-  )
+(defmacro gcache--initialize-storage (symbol)
+  "Initializse a storage for a cache and bind it to SYMBOL."
+  ;; hash version.
+  ;;`(setq ,symbol (make-hash-table))
+  ;; alist version.
+  `(setq ,symbol nil))
 
 (defun gcache-fetch (key cache)
   "Return the value of KEY in CACHE."
   (cdr (assoc key cache)))
 
-
-(cl-defmacro defcache (symbol &key buffer-local doc-string)
-  "Define SYMBOL as a cache, and return SYMBOL.
-
-The new cache is automatically-buffer-local when BUFFER-LOCAL is
-non-nil, otherwise global.
-
-A cache is an alist with this structure:
-(('a-cache-entry value . fetch-fucntion)"
-  `(prog1
-       (defvar ,symbol nil ,doc-string)
-     (when ,buffer-local
-       (make-variable-buffer-local ',symbol))))
 
 (defun gcache-exist-p (entry cache)
   "Return t if CACHE has ENTRY, otherwise nil.
@@ -144,6 +115,31 @@ ENTRY should be a symbol."
 
 Return t if ENTRY exists, othewise nil."
   )
+
+
+;;; Helper functions.
+
+(defun gcache--copy-symbol-property (propname from-symbol to-symbol)
+  "Copy a property named PROPNAME from FROM-SYMBOL to TO-SYMBOL."
+  (put to-symbol propname
+       (get from-symbol propname)))
+
+(defun gcache--copy-keys-and-value-0 (from-cache to-cache)
+  "Copy all keys from FROM-CACHE to TO-CACHE.
+
+All of the values of the keys are set to 'no-value."
+  (maphash #'(lambda (key value)
+               (puthash key (nth 0 value) to-cache))
+           from-cache))
+
+(defun gcache--make-alist-from-key-and-value0 (hash)
+  "Make and return an alist from keys and value0 of HASH."
+  (let ((res nil))
+    (maphash #'(lambda (key value)
+                 (push (cons key (nth 0 value))
+                       res))
+             hash)
+    res))
 
 (defun gcache--dump (cache)
   "Dump CACHE in minibuffer."

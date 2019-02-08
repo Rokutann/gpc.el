@@ -92,10 +92,26 @@ A cache is an alist with this structure:
   ;; alist version.
   `(setq ,symbol nil))
 
+;; (defun gcache-fetch (key cache)
+;;   "Return the value of KEY in CACHE."
+;;   (cdr (assoc key cache)))
+
 (defun gcache-fetch (key cache)
   "Return the value of KEY in CACHE."
-  (cdr (assoc key cache)))
+  (let ((value (cdr (assoc key cache))))
+    (if value
+        value
+      (push (cons key 'no-value) cache)
+      'no-value)))
 
+(defmacro gcache--get-retrieve-fun (key cache)
+  "Get the retrieve function for KEY in CACHE."
+  `(nth 1 (gethash ,key
+                   (symbol-value (get ',cache 'gcache-cache-spec)))))
+
+(defmacro gcache-clear (cache)
+  "Clear all keys and values from CACHE."
+  `(setq ,cache nil))
 
 (defun gcache-exist-p (entry cache)
   "Return t if CACHE has ENTRY, otherwise nil.

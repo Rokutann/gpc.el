@@ -32,60 +32,7 @@
 
 ;; Core functions.
 
-(defmacro gcache-defcache-spec (symbol doc-string &rest spec)
-  "Define a cache SPEC with DOC-STRING, and return SYMBOL.
-
-This macro stores a marker in the property list of the
-SYMBOL.  The format is '(gcache-cache spec . SYMBOL) .
-
-SPEC should be a list of cache entry definitions, which is a list
-of a cash entry, a default value, a retrieve function.
-
-Example:
-'((current-buffer-name \"*scratch*\" '(lambda () (buffer-name (current-buffer))))
-                          (pwd \"/\" '(lambda () (with-temp-buffer
-                                            (call-process \"pwd\" nil t)
-                                            (buffer-string)))))"
-  (declare (indent 1))
-  `(prog1
-       (defvar ,symbol nil ,doc-string)
-     (put ',symbol 'gcache-cache-spec ',symbol)
-     (setq ,symbol (make-hash-table))
-     (mapcar #'(lambda (entry)
-                 (puthash (car entry) (cdr entry) ,symbol))
-             ',spec)))
-
-(defmacro gcache-defcache-spec-orig (symbol doc-string spec)
-  "Define a cache SPEC with DOC-STRING, and return SYMBOL.
-
-This macro stores a marker in the property list of the
-SYMBOL.  The format is '(gcache-cache spec . SYMBOL) .
-
-SPEC should be a list of cache entry definitions, which is a list
-of a cash entry, a default value, a retrieve function.
-
-Example:
-'((current-buffer-name \"*scratch*\" '(lambda () (buffer-name (current-buffer))))
-                          (pwd \"/\" '(lambda () (with-temp-buffer
-                                            (call-process \"pwd\" nil t)
-                                            (buffer-string)))))"
-  (declare (indent 1))
-  `(prog1
-       (defvar ,symbol nil ,doc-string)
-     (put ',symbol 'gcache-cache-spec ',symbol)
-     (setq ,symbol (make-hash-table))
-     (mapcar #'(lambda (entry)
-                 (puthash (car entry) (cdr entry) ,symbol))
-             ,spec)))
-(defmacro gcache-cache-spec-p (symbol)
-  "Return t if SYMBOL is a cache spec, otherwise nil."
-  (declare (indent 0))
-  `(if (get ',symbol 'gcache-cache-spec)
-       t
-     nil))
-
-
-(cl-defmacro gcache-defcache (symbol cache-spec &key buffer-local doc-string)
+(cl-defmacro gcache-defcache (symbol cache-spec buffer-local doc-string &rest body)
   "Define SYMBOL as a cache based on CASHE-SPEC, and return SYMBOL.
 
 The new cache is automatically-buffer-local when BUFFER-LOCAL is
@@ -95,7 +42,12 @@ A cache is an alist with this structure:
 \(\('a-cache-entry value . fetch-fucntion\)"
   `(prog1
        (defvar ,symbol nil ,doc-string)
-     (gcache-util-copy-symbol-property 'gcache-cache-spec ',cache-spec ',symbol)
+     (let ((ahash (make-hash-table)))
+       (mapcar #'(lambda (entry)
+                   (puthash (car entry) (cdr entry) ahash))
+               ',body)
+       (put ',symbol 'gcache-cache-spec ahash))
+     ;;(gcache-util-copy-symbol-property 'gcache-cache-spec ',cache-spec ',symbol)
      (gcache--initialize-storage ,symbol)
      (when ,buffer-local
        (make-variable-buffer-local ',symbol))
@@ -104,7 +56,6 @@ A cache is an alist with this structure:
 (defmacro gcache--initialize-storage (symbol)
   "Initializse a storage for a cache and bind it to SYMBOL."
   `(setq ,symbol nil))
-
 
 (defmacro gcache-set-default-content (cache)
   "Set the default content for CACHE from CACHE-SPEC."
@@ -152,6 +103,10 @@ A cache is an alist with this structure:
 ;; Spec functions
 
 (defmacro gcache-spec (cache)
+  "Return the spec of CACHE."
+  `(get ',cache 'gcache-cache-spec))
+
+(defmacro gcache-spec-orig (cache)
   "Return the spec of CACHE."
   `(symbol-value (get ',cache 'gcache-cache-spec)))
 

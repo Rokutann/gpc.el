@@ -12,33 +12,21 @@
 (defun a-retriever ()
   t)
 
-(defun setup-defcache-spec-orig ()
-  (gcache-defcache-spec acache-spec
-    "A new cache spec."
-    '((current-buffer-name "*scratch*" (lambda () (buffer-name (current-buffer))))
-      (pwd "/" (lambda ()
-                 (with-temp-buffer
-                   (call-process "pwd" nil t)
-                   (s-chop-suffix "\n" (buffer-string)))))
-      (true nil a-retriever)))
-  (defvar a-random-var nil))
-
-(defun setup-defcache-spec ()
-  (gcache-defcache-spec acache-spec
-    "A new cache spec."
-    (current-buffer-name "*scratch*" (lambda () (buffer-name (current-buffer))))
-    (pwd "/" (lambda ()
-               (with-temp-buffer
-                 (call-process "pwd" nil t)
-                 (s-chop-suffix "\n" (buffer-string)))))
-    (true nil a-retriever))
-  (defvar a-random-var nil))
-
 (defun setup-gcache-defcache ()
-  (setup-defcache-spec)
-  (gcache-defcache g-cache acache-spec :doc-string "a global cache.")
-  (gcache-defcache l-cache acache-spec :buffer-local t :doc-string "a buffer-local cache."))
-
+  (gcache-defcache g-cache acache-spec nil "a global cache."
+                     (current-buffer-name "*scratch*" (lambda () (buffer-name (current-buffer))))
+                     (pwd "/" (lambda ()
+                                (with-temp-buffer
+                                  (call-process "pwd" nil t)
+                                  (s-chop-suffix "\n" (buffer-string)))))
+                     (true nil a-retriever))
+  (gcache-defcache l-cache acache-spec t "a buffer-local cache."
+                     (current-buffer-name "*scratch*" (lambda () (buffer-name (current-buffer))))
+                     (pwd "/" (lambda ()
+                                (with-temp-buffer
+                                  (call-process "pwd" nil t)
+                                  (s-chop-suffix "\n" (buffer-string)))))
+                     (true nil a-retriever)))
 
 ;;; Tests.
 
@@ -58,14 +46,6 @@
   (should (equal (gcache-spec-get 'test g-cache)
                  '("testing" a-fetchfn)))
   )
-
-(ert-deftest test-def-cache-spec ()
-  (setup-defcache-spec)
-  ;;(should (eq (hash-table-p acache-spec) t))
-  (should (eq (gcache-cache-spec-p acache-spec) t))
-  (should (eq (gcache-cache-spec-p a-random-var) nil))
-  (should (equal (nth 0 (gethash 'current-buffer-name acache-spec)) "*scratch*"))
-  (should (equal (nth 0 (gethash 'pwd acache-spec)) "/")))
 
 (ert-deftest test-gcache-defcache-buffer-local ()
   (setup-gcache-defcache)
@@ -94,12 +74,17 @@
                  (s-chop-suffix "/" (f-expand default-directory)))))
 
 (ert-deftest test-gcache-defcache ()
-  (setup-defcache-spec)
-  (gcache-defcache acache acache-spec)
+  (gcache-defcache acache acache-spec nil ""
+                     (current-buffer-name "*scratch*" (lambda () (buffer-name (current-buffer))))
+                     (pwd "/" (lambda ()
+                                (with-temp-buffer
+                                  (call-process "pwd" nil t)
+                                  (s-chop-suffix "\n" (buffer-string)))))
+                     (true nil a-retriever)                     )
   ;; (should (eq (hash-table-p acache)
   ;;             t))
-  (should (eq (get 'acache 'gcache-cache-spec)
-              'acache-spec))
+  (should (eq (hash-table-p (get 'acache 'gcache-cache-spec))
+              t))
   ;; (should (equal (gethash 'pwd acache)
   ;;                "/"))
   ;; (should (equal (gethash 'pwd acache)
@@ -121,8 +106,8 @@
 
 (ert-deftest test-gcache-spec ()
   (setup-gcache-defcache)
-  (should (equal (gcache-spec g-cache)
-                 acache-spec)))
+  (should (equal (gethash 'true (gcache-spec g-cache))
+                 '(nil a-retriever))))
 
 (ert-deftest test-gcache-set-default-content ()
   (setup-gcache-defcache)

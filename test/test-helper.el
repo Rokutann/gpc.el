@@ -16,19 +16,6 @@
   (and (is-subset-hash-of hash-a hash-b)
        (is-subset-hash-of hash-b hash-a)))
 
-(defun is-subset-alist-of (alist-a alist-b)
-  "Return t is ALIST-A is a sbuset of ALIST-B, otherwise nil."
-  (let ((res t))
-    (mapcar #'(lambda (pair)
-                (unless (member pair alist-b)
-                  (setq res nil)))
-            alist-a)
-    res))
-
-(defun alist-equal (alist-a alist-b)
-  (and (is-subset-alist-of alist-a alist-b)
-       (is-subset-alist-of alist-b alist-a)))
-
 ;; Local Variables:
 ;; flycheck-disabled-checkers: (emacs-lisp-checkdoc)
 ;; End:

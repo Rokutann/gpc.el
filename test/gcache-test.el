@@ -129,22 +129,35 @@
   (setq hash-a (make-hash-table))
   (puthash 'a '(1 10) hash-a)
   (puthash 'b '(2 20) hash-a)
-  (should (alist-equal
+  (should (gcache--alist-equal
            (gcache--make-alist-from-key-and-value0 hash-a)
            '((a . 1) (b . 2))))
   )
 
+(defun setup-alist ()
+  (setq al '((a . b) (c . d))))
+
+
+(ert-deftest test-gcache--alist-clear ()
+  (setup-alist)
+  (gcache--alist-clear al)
+  (should (eq al nil)))
+
+(ert-deftest test-gcache--alist-push ()
+  (setup-alist)
+  (gcache--alist-push 'e 'f al)
+  (should (gcache--alist-equal al '((a . b) (c . d) (e . f)))))
+
+(ert-deftest test-gcache--alist-subset-p ()
+  (should (eq (gcache--alist-subset-p '((a . 1)) '((b . 2) (a . 1)))
+              t)))
+
+(ert-deftest test-gcache--alist-equal ()
+  (should (eq (gcache--alist-equal '((a . 1) (b . 2))
+                                   '((b . 2) (a . 1)))
+              t)))
 
 ;;; Tests for test helper functions.
-
-(ert-deftest test-is-subset-alist-of ()
-  (should (eq (is-subset-alist-of '((a . 1)) '((b . 2) (a . 1)))
-              t)))
-
-(ert-deftest test-alist-equal ()
-  (should (eq (alist-equal '((a . 1) (b . 2))
-                           '((b . 2) (a . 1)))
-              t)))
 
 (ert-deftest test-is-subset-hash-of ()
   (setq hash-a (make-hash-table))

@@ -167,5 +167,32 @@ All of the values of the keys are set to 'no-value."
   "Dump CACHE in minibuffer."
   (message (pp cache)))
 
+;; Helper functions for alist
+
+(defmacro gcache--alist-clear (alist)
+  "Set ALIST nil."
+  `(setq ,alist nil))
+
+(defmacro gcache--alist-push (key value alist)
+  "Push the cons of KEY and VALUE into ALIST."
+  ;; `push' is equivalent to setf. It's seemeingly safe with lexical
+  ;; bindings.
+  `(push (cons ,key ,value) ,alist))
+
+(defun gcache--alist-subset-p (alist-a alist-b)
+  "Return t is ALIST-A is a sbuset of ALIST-B, otherwise nil."
+  (let ((res t))
+    (mapcar #'(lambda (pair)
+                (unless (member pair alist-b)
+                  (setq res nil)))
+            alist-a)
+    res))
+
+(defun gcache--alist-equal (alist-a alist-b)
+  (and (gcache--alist-subset-p alist-a alist-b)
+       (gcache--alist-subset-p alist-b alist-a)))
+
+
+
 (provide 'gcache)
 ;;; gcache.el ends here

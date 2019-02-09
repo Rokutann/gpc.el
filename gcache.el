@@ -29,10 +29,17 @@
 
 (require 'cl-lib)
 
+;; User facing variables.
+
+(defvar gcache-namespace-polution nil
+  "Polute the namespace if t, otherwise ensure all symbols begin with `gcache'.
+
+Currently, `defcache' is the only polution this option introduces.")
+
 
 ;; Core functions.
 
-(cl-defmacro gcache-defcache (symbol cache-spec buffer-local doc-string &rest body)
+(cl-defmacro gcache-defcache (symbol buffer-local doc-string &rest body)
   "Define SYMBOL as a cache based on CASHE-SPEC, and return SYMBOL.
 
 The new cache is automatically-buffer-local when BUFFER-LOCAL is
@@ -40,6 +47,7 @@ non-nil, otherwise global.
 
 A cache is an alist with this structure:
 \(\('a-cache-entry value . fetch-fucntion\)"
+  (declare (indent 2))
   `(prog1
        (defvar ,symbol nil ,doc-string)
      (let ((ahash (make-hash-table)))
@@ -47,11 +55,13 @@ A cache is an alist with this structure:
                    (puthash (car entry) (cdr entry) ahash))
                ',body)
        (put ',symbol 'gcache-cache-spec ahash))
-     ;;(gcache-util-copy-symbol-property 'gcache-cache-spec ',cache-spec ',symbol)
      (gcache--initialize-storage ,symbol)
-     (when ,buffer-local
+     (when (eq ,buffer-local 'buffer-local)
        (make-variable-buffer-local ',symbol))
      ))
+
+(when gcache-namespace-polution
+  (defalias 'defcache 'gcache-defcache))
 
 (defmacro gcache--initialize-storage (symbol)
   "Initializse a storage for a cache and bind it to SYMBOL."

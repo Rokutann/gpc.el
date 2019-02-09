@@ -71,7 +71,7 @@ A cache is an alist with this structure:
 \(\('a-cache-entry value . fetch-fucntion\)"
   `(prog1
        (defvar ,symbol nil ,doc-string)
-     (gcache--copy-symbol-property 'gcache-cache-spec ',cache-spec ',symbol)
+     (gcache-util-copy-symbol-property 'gcache-cache-spec ',cache-spec ',symbol)
      (gcache--initialize-storage ,symbol)
      (when ,buffer-local
        (make-variable-buffer-local ',symbol))
@@ -79,7 +79,7 @@ A cache is an alist with this structure:
 
 (defmacro gcache-set-default-content (cache)
   "Set the default content for CACHE from CACHE-SPEC."
-  `(setq ,cache (gcache--make-alist-from-key-and-value0
+  `(setq ,cache (gcache-util-make-alist-from-key-and-value0
                  (gcache-get-spec ,cache))))
 
 (defmacro gcache--initialize-storage (symbol)
@@ -95,7 +95,7 @@ A cache is an alist with this structure:
                          (gcache-spec--get-retrievefn
                           ,key
                           (gcache-get-spec ,cache)))))
-         (gcache--alist-set ,key new-value ,cache)
+         (gcache-alist-set ,key new-value ,cache)
          new-value))))
 
 (defmacro gcache-get-spec (cache)
@@ -108,14 +108,14 @@ A cache is an alist with this structure:
 
 (defmacro gcache-clear (cache)
   "Clear all keys and values from CACHE."
-  `(gcache--alist-clear ,cache))
+  `(gcache-alist-clear ,cache))
 
 (cl-defun gcache-exist-p (key cache &key (testfn 'eq))
   "Return t if CACHE has ENTRY, otherwise nil."
-  (if (gcache--alist-get key cache :testfn testfn) t nil))
+  (if (gcache-alist-get key cache :testfn testfn) t nil))
 
 (defmacro gcache-add (key fetch-fun cache)
-  "Add ENTRY to CACHE with FETCH-FUN, and return ENTRY."
+  "Add KEY to CACHE with FETCH-FUN, and return ENTRY."
   `(unless (gcache-exist-p ',key ,cache )
      (setq ,cache
            (push (cons ',key '(nil ,fetch-fun)) ,cache))
@@ -130,20 +130,12 @@ Return t if ENTRY exists, othewise nil."
 
 ;;; Helper functions.
 
-(defun gcache--copy-symbol-property (propname from-symbol to-symbol)
+(defun gcache-util-copy-symbol-property (propname from-symbol to-symbol)
   "Copy a property named PROPNAME from FROM-SYMBOL to TO-SYMBOL."
   (put to-symbol propname
        (get from-symbol propname)))
 
-(defun gcache--copy-keys-and-value-0 (from-cache to-cache)
-  "Copy all keys from FROM-CACHE to TO-CACHE.
-
-All of the values of the keys are set to 'no-value."
-  (maphash #'(lambda (key value)
-               (puthash key (nth 0 value) to-cache))
-           from-cache))
-
-(defun gcache--make-alist-from-key-and-value0 (hash)
+(defun gcache-util-make-alist-from-key-and-value0 (hash)
   "Make and return an alist from keys and value0 of HASH."
   (let ((res nil))
     (maphash #'(lambda (key value)
@@ -157,24 +149,24 @@ All of the values of the keys are set to 'no-value."
 
 ;; Helper functions for alist
 
-(defmacro gcache--alist-clear (alist)
+(defmacro gcache-alist-clear (alist)
   "Set ALIST nil."
   `(setq ,alist nil))
 
-(cl-defmacro gcache--alist-set (key value alist &key (testfn 'eq))
+(cl-defmacro gcache-alist-set (key value alist &key (testfn 'eq))
   "Set a KEY VALUE pair in ALIST with TESTFN."
   `(setf (alist-get ,key ,alist nil nil ',testfn) ,value))
 
-(cl-defmacro gcache--alist-remove (key alist &key (testfn 'eq))
+(cl-defmacro gcache-alist-remove (key alist &key (testfn 'eq))
   "Remove the pair with KEY in ALIST with TESTFN."
   `(setf (alist-get ,key ,alist nil t ',testfn) nil))
 
 
-(cl-defun gcache--alist-get (key alist &key default (testfn 'eq))
+(cl-defun gcache-alist-get (key alist &key default (testfn 'eq))
   "Return the value of KEY in ALIST if exists TESTFN wise, otherwise DEFAULT."
   (alist-get key alist default nil testfn))
 
-(defun gcache--alist-subset-p (alist-a alist-b)
+(defun gcache-alist-subset-p (alist-a alist-b)
   "Return t is ALIST-A is a sbuset of ALIST-B, otherwise nil."
   (let ((res t))
     (mapc #'(lambda (pair)
@@ -183,10 +175,10 @@ All of the values of the keys are set to 'no-value."
           alist-a)
     res))
 
-(defun gcache--alist-set-equal (alist-a alist-b)
+(defun gcache-alist-set-equal (alist-a alist-b)
   "Return t if ALIST-A and ALIST-B are identical setwise, otherwise nil."
-  (and (gcache--alist-subset-p alist-a alist-b)
-       (gcache--alist-subset-p alist-b alist-a)))
+  (and (gcache-alist-subset-p alist-a alist-b)
+       (gcache-alist-subset-p alist-b alist-a)))
 
 
 (provide 'gcache)

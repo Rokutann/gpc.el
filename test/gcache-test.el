@@ -12,7 +12,7 @@
 (defun a-retriever ()
   t)
 
-(defun setup-defcache-spec ()
+(defun setup-defcache-spec-orig ()
   (gcache-defcache-spec acache-spec
     "A new cache spec."
     '((current-buffer-name "*scratch*" (lambda () (buffer-name (current-buffer))))
@@ -21,6 +21,17 @@
                    (call-process "pwd" nil t)
                    (s-chop-suffix "\n" (buffer-string)))))
       (true nil a-retriever)))
+  (defvar a-random-var nil))
+
+(defun setup-defcache-spec ()
+  (gcache-defcache-spec acache-spec
+    "A new cache spec."
+    (current-buffer-name "*scratch*" (lambda () (buffer-name (current-buffer))))
+    (pwd "/" (lambda ()
+               (with-temp-buffer
+                 (call-process "pwd" nil t)
+                 (s-chop-suffix "\n" (buffer-string)))))
+    (true nil a-retriever))
   (defvar a-random-var nil))
 
 (defun setup-gcache-defcache ()

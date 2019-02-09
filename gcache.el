@@ -40,13 +40,22 @@ Currently, `defcache' is the only polution this option introduces.")
 ;; Core functions.
 
 (cl-defmacro gcache-defcache (symbol buffer-local doc-string &rest body)
-  "Define SYMBOL as a cache based on CASHE-SPEC, and return SYMBOL.
+  "Define SYMBOL as a cache, and return SYMBOL.
 
-The new cache is automatically-buffer-local when BUFFER-LOCAL is
-non-nil, otherwise global.
+If the value of buffer-local is 'buffer-local, the cache is
+automatically buffer-local. Otherwise, global.  The body defines
+the spec of the cache. Each line of it consists of a key, an
+initial value, and a fetch function.
 
-A cache is an alist with this structure:
-\(\('a-cache-entry value . fetch-fucntion\)"
+Example:
+(gcache-defcache g-cache 'global
+    \"a global cache.\"
+    (current-buffer-name \"*scratch*\" (lambda () (buffer-name (current-buffer))))
+    (pwd \"/\" (lambda ()
+               (with-temp-buffer
+                 (call-process \"pwd\" nil t)
+                 (s-chop-suffix \"\\n\" (buffer-string)))))
+    (true nil a-retriever))"
   (declare (indent 2))
   `(prog1
        (defvar ,symbol nil ,doc-string)
@@ -64,16 +73,20 @@ A cache is an alist with this structure:
   (defalias 'defcache 'gcache-defcache))
 
 (defmacro gcache--initialize-storage (symbol)
-  "Initializse a storage for a cache and bind it to SYMBOL."
+  "Initializse a storage for a cache and bind it to SYMBOL.
+
+Currently, it just sets the SYMBOL to nil."
   `(setq ,symbol nil))
 
 (defmacro gcache-set-default-content (cache)
-  "Set the default content for CACHE from CACHE-SPEC."
+  "Set the default content for CACHE from CACHE-SPEC.
+
+Populate keys and initvalues from its cache spec."
   `(setq ,cache (gcache-util-make-alist-from-key-and-value0
                  (gcache-spec ,cache))))
 
 (defmacro gcache-fetch (key cache)
-  "Return the value of KEY in CACHE."
+  "Return the value of KEY in CACHE or with its fetch function."
   (let ((value (gensym))
         (new-value (gensym)))
     `(let ((,value (cdr (assoc ,key ,cache))))
@@ -87,11 +100,11 @@ A cache is an alist with this structure:
            ,new-value)))))
 
 (defmacro gcache-clear (cache)
-  "Clear all keys and values from CACHE."
+  "Clear all keys and values in CACHE."
   `(gcache-alist-clear ,cache))
 
 (cl-defun gcache-keyp (key cache &key (testfn 'eq))
-  "Return t if CACHE has ENTRY, otherwise nil."
+  "Return t if CACHE has an entry with KEY, otherwise nil."
   (if (gcache-alist-get key cache :testfn testfn) t nil))
 
 (defun gcache-show (cache)
@@ -99,15 +112,8 @@ A cache is an alist with this structure:
   (message (pp cache))
   cache)
 
-(defmacro gcache-add (key fetch-fun cache)
-  "Add KEY to CACHE with FETCH-FUN, and return ENTRY."
-  `(unless (gcache-keyp ',key ,cache )
-     (setq ,cache
-           (push (cons ',key '(nil ,fetch-fun)) ,cache))
-     ',key))
-
 (defmacro gcache-remove (key cache)
-  "Remove the pair with KEY from CACHE."
+  "Remove the entry with KEY from CACHE."
   `(gcache-alist-remove ,key ,cache))
 
 ;; Spec functions
@@ -115,10 +121,6 @@ A cache is an alist with this structure:
 (defmacro gcache-spec (cache)
   "Return the spec of CACHE."
   `(get ',cache 'gcache-cache-spec))
-
-(defmacro gcache-spec-orig (cache)
-  "Return the spec of CACHE."
-  `(symbol-value (get ',cache 'gcache-cache-spec)))
 
 (defmacro gcache-spec-show (cache)
   "Show the spec of CACHE, and return it."
@@ -142,11 +144,6 @@ A cache is an alist with this structure:
 
 
 ;; Util functions.
-
-(defun gcache-util-copy-symbol-property (propname from-symbol to-symbol)
-  "Copy a property named PROPNAME from FROM-SYMBOL to TO-SYMBOL."
-  (put to-symbol propname
-       (get from-symbol propname)))
 
 (defun gcache-util-make-alist-from-key-and-value0 (hash)
   "Make and return an alist from keys and value0 of HASH."

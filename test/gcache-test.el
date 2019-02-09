@@ -132,14 +132,6 @@
 
 ;;; Tests for helper functions.
 
-(ert-deftest test-gcache-util-copy-symbol-property ()
-  (setq symbol-a 1)
-  (setq symbol-b 2)
-  (put 'symbol-a 'name 'value)
-  (should (eq (gcache-util-copy-symbol-property 'name 'symbol-a 'symbol-b)
-              'value)))
-
-
 (ert-deftest test-gcache-util-make-alist-from-key-and-value0 ()
   (setq hash-a (make-hash-table))
   (puthash 'a '(1 10) hash-a)

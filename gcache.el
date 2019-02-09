@@ -80,25 +80,10 @@ A cache is an alist with this structure:
 (defmacro gcache-set-default-content (cache)
   "Set the default content for CACHE from CACHE-SPEC."
   `(setq ,cache (gcache--make-alist-from-key-and-value0
-                 (gcache-get-cache-spec ,cache))))
-
-(defmacro gcache-get-cache-spec (cache)
-  "Get the cache spec of CACHE."
-  `(symbol-value (get ',cache 'gcache-cache-spec)))
-
-(defmacro gcache--set-default-content (cache-spec cache)
-  "Set the default content for CACHE from CACHE-SPEC."
-  `(if (hash-table-p ,cache)
-       ;; hash version
-       (gcache--copy-keys-and-value-0 ,cache-spec ,cache)
-     ;; alist version
-     (setq ,cache (gcache--make-alist-from-key-and-value0 ,cache-spec))))
+                 (gcache-get-spec ,cache))))
 
 (defmacro gcache--initialize-storage (symbol)
   "Initializse a storage for a cache and bind it to SYMBOL."
-  ;; hash version.
-  ;;`(setq ,symbol (make-hash-table))
-  ;; alist version.
   `(setq ,symbol nil))
 
 (defmacro gcache-fetch (key cache)
@@ -107,31 +92,34 @@ A cache is an alist with this structure:
      (if value
          value
        (let ((new-value (funcall
-                         (gcache--get-retrieve-fun ,key ,cache))))
-         (push (cons ,key new-value) ,cache)
+                         (gcache-spec--get-retrievefn
+                          ,key
+                          (gcache-get-spec ,cache)))))
+         (gcache--alist-set ,key new-value ,cache)
          new-value))))
 
-(defmacro gcache--get-retrieve-fun (key cache)
-  "Get the retrieve function for KEY in CACHE."
-  `(nth 1 (gethash ,key
-                   (symbol-value (get ',cache 'gcache-cache-spec)))))
+(defmacro gcache-get-spec (cache)
+  "Get the cache spec of CACHE."
+  `(symbol-value (get ',cache 'gcache-cache-spec)))
+
+(defun gcache-spec--get-retrievefn (key spec)
+  "Get the retrieve function for KEY from SPEC."
+  (nth 1 (gethash key spec)))
 
 (defmacro gcache-clear (cache)
   "Clear all keys and values from CACHE."
-  `(setq ,cache nil))
+  `(gcache--alist-clear ,cache))
 
-(defun gcache-exist-p (entry cache)
-  "Return t if CACHE has ENTRY, otherwise nil.
+(cl-defun gcache-exist-p (key cache &key (testfn 'eq))
+  "Return t if CACHE has ENTRY, otherwise nil."
+  (if (gcache--alist-get key cache :testfn testfn) t nil))
 
-ENTRY should be a symbol."
-  (if (assq entry cache) t nil))
-
-(defmacro gcache-add (entry fetch-fun cache)
+(defmacro gcache-add (key fetch-fun cache)
   "Add ENTRY to CACHE with FETCH-FUN, and return ENTRY."
-  `(unless (gcache-exist-p ',entry ,cache )
+  `(unless (gcache-exist-p ',key ,cache )
      (setq ,cache
-           (push (cons ',entry '(nil ,fetch-fun)) ,cache))
-     ',entry))
+           (push (cons ',key '(nil ,fetch-fun)) ,cache))
+     ',key))
 
 (defun gcache-remove (entry cache)
   "Remove ENTRY from CACHE.

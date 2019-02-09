@@ -84,14 +84,16 @@
   (gcache-clear g-cache)
   (should (eq g-cache nil)))
 
-(ert-deftest test-gcache--get-retrieve-fun ()
+(ert-deftest test-gcache-spec--get-retrievefn ()
   (setup-gcache-defcache)
-  (should (eq (gcache--get-retrieve-fun 'true g-cache)
+  (should (eq (gcache-spec--get-retrievefn
+               'true
+               (gcache-get-spec g-cache))
               'a-retriever)))
 
-(ert-deftest test-gcache-cache-spec ()
+(ert-deftest test-gcache-get-spec ()
   (setup-gcache-defcache)
-  (should (equal (gcache-get-cache-spec g-cache)
+  (should (equal (gcache-get-spec g-cache)
                  acache-spec)))
 
 (ert-deftest test-gcache-set-default-content ()

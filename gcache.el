@@ -29,7 +29,8 @@
 
 (require 'cl-lib)
 
-;;; Core functions.
+
+;; Core functions.
 
 (defmacro gcache-defcache-spec (symbol doc-string spec)
   "Define a cache SPEC with DOC-STRING, and return SYMBOL.
@@ -89,15 +90,17 @@ A cache is an alist with this structure:
 
 (defmacro gcache-fetch (key cache)
   "Return the value of KEY in CACHE."
-  `(let ((value (cdr (assoc ,key ,cache))))
-     (if value
-         value
-       (let ((new-value (funcall
-                         (gcache-spec-get-fetchfn
-                          ,key
-                          ,cache))))
-         (gcache-alist-set ,key new-value ,cache)
-         new-value))))
+  (let ((value (gensym))
+        (new-value (gensym)))
+    `(let ((,value (cdr (assoc ,key ,cache))))
+       (if ,value
+           ,value
+         (let ((,new-value (funcall
+                            (gcache-spec-get-fetchfn
+                             ,key
+                             ,cache))))
+           (gcache-alist-set ,key ,new-value ,cache)
+           ,new-value)))))
 
 (defmacro gcache-clear (cache)
   "Clear all keys and values from CACHE."
@@ -131,10 +134,11 @@ A cache is an alist with this structure:
 
 (defmacro gcache-spec-show (cache)
   "Show the spec of CACHE, and return it."
-  `(let ((alist (gcache-util-hash-to-alist
-                 (gcache-spec ,cache))))
-     (message (pp alist))
-     alist))
+  (let ((alist (gensym)))
+    `(let ((,alist (gcache-util-hash-to-alist
+                    (gcache-spec ,cache))))
+       (message (pp ,alist))
+       ,alist)))
 
 (defmacro gcache-spec-set (key initval fetchfn cache)
   "Set a spec entry for CACHE with KEY, INITVAL, and FETCHFN."

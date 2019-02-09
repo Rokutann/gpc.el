@@ -31,6 +31,23 @@
 
 ;;; Tests.
 
+(ert-deftest test-gcache-spec-get ()
+  (setup-gcache-defcache)
+  (should (equal (gcache-spec-get 'true g-cache)
+                 '(nil a-retriever))))
+
+(ert-deftest test-gcache-spec-set ()
+  (setup-gcache-defcache)
+  (should (equal (gcache-spec-get 'true g-cache)
+                 '(nil a-retriever)))
+  (gcache-spec-set 'true t 'a-fetchfn g-cache)
+  (should (equal (gcache-spec-get 'true g-cache)
+                 '(t a-fetchfn)))
+  (gcache-spec-set 'test "testing" 'a-fetchfn g-cache)
+  (should (equal (gcache-spec-get 'test g-cache)
+                 '("testing" a-fetchfn)))
+  )
+
 (ert-deftest test-def-cache-spec ()
   (setup-defcache-spec)
   ;;(should (eq (hash-table-p acache-spec) t))
@@ -51,11 +68,11 @@
   (should (equal (documentation-property 'l-cache 'variable-documentation)
                  "a buffer-local cache.")))
 
-(ert-deftest test-gcache-exist-p ()
+(ert-deftest test-gcache-keyp ()
   (setup-gcache-defcache)
   (gcache-set-default-content g-cache)
-  (should (eq (gcache-exist-p 'spam g-cache) nil))
-  (should (eq (gcache-exist-p 'pwd g-cache) t)))
+  (should (eq (gcache-keyp 'spam g-cache) nil))
+  (should (eq (gcache-keyp 'pwd g-cache) t)))
 
 (ert-deftest test-gcache-fetch ()
   (setup-gcache-defcache)
@@ -84,16 +101,16 @@
   (gcache-clear g-cache)
   (should (eq g-cache nil)))
 
-(ert-deftest test-gcache-spec--get-retrievefn ()
+(ert-deftest test-gcache-spec-get-fetchfn ()
   (setup-gcache-defcache)
-  (should (eq (gcache-spec--get-retrievefn
+  (should (eq (gcache-spec-get-fetchfn
                'true
-               (gcache-get-spec g-cache))
+               g-cache)
               'a-retriever)))
 
-(ert-deftest test-gcache-get-spec ()
+(ert-deftest test-gcache-spec ()
   (setup-gcache-defcache)
-  (should (equal (gcache-get-spec g-cache)
+  (should (equal (gcache-spec g-cache)
                  acache-spec)))
 
 (ert-deftest test-gcache-set-default-content ()
@@ -102,6 +119,11 @@
   (should (equal (gcache-fetch 'pwd g-cache)
                  "/")))
 
+(ert-deftest test-gcache-remove ()
+  (setup-gcache-defcache)
+  (gcache-remove 'pwd g-cache)
+  (should (eq (gcache-keyp 'pwd g-cache)
+              nil)))
 
 ;;; Tests for helper functions.
 
@@ -121,6 +143,8 @@
            (gcache-util-make-alist-from-key-and-value0 hash-a)
            '((a . 1) (b . 2))))
   )
+
+;;; Tests for alist functions.
 
 (defun setup-alist ()
   (setq al '((a . b) (c . d)))
@@ -184,6 +208,14 @@
   (setup-alist)
   (gcache-alist-remove 'a al)
   (should (gcache-alist-set-equal al '((c . d))))
+  )
+
+(ert-deftest test-gcache-util-hash-to-alist ()
+  (setq hash (make-hash-table))
+  (puthash 'a 1 hash)
+  (puthash 'b 2 hash)
+  (should (gcache-alist-set-equal (gcache-util-hash-to-alist hash)
+                                  '((a . 1) (b . 2))))
   )
 
 

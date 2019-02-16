@@ -1,7 +1,7 @@
 (source gnu)
 (source melpa)
 
-(package-file "gcache.el")
+(package-file "gpc.el")
 
 (development
  (depends-on "f")

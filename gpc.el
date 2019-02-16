@@ -1,4 +1,4 @@
-;;; gcache.el --- A general purpose cache fascility.   -*- lexical-binding: t; -*-
+;;; gpc.el --- A general purpose cache fascility.   -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Cyriakus "Mukuge" Hill
 
@@ -32,14 +32,14 @@
 
 ;; User facing variables.
 
-(defvar gcache-namespace-polution nil
+(defvar gpc-namespace-polution nil
   "Allow to polute the namespace if t, otherwise don't.
 
 Currently, `defcache' is the only polution this option introduces.")
 
 ;; Util functions.
 
-(defun gcache-util-make-alist-from-key-and-value0 (hash)
+(defun gpc-util-make-alist-from-key-and-value0 (hash)
   "Make and return an alist from keys and value0 of HASH."
   (let ((res nil))
     (maphash #'(lambda (key value)
@@ -47,7 +47,7 @@ Currently, `defcache' is the only polution this option introduces.")
              hash)
     res))
 
-(defun gcache-util-hash-to-alist (hash)
+(defun gpc-util-hash-to-alist (hash)
   "Return an alist made from keys and values of HASH."
   (let ((res nil))
     (maphash #'(lambda (k v) (nalist-set k v res)) hash)
@@ -56,12 +56,12 @@ Currently, `defcache' is the only polution this option introduces.")
 
 ;; Core functions.
 
-(cl-defmacro gcache-defcache (symbol buffer-local doc-string &rest body)
-  "Define SYMBOL as a general purpose cache or gcache, and return SYMBOL.
+(cl-defmacro gpc-defcache (symbol buffer-local doc-string &rest body)
+  "Define SYMBOL as a general purpose cache or gpc, and return SYMBOL.
 
-A general purpose cache, or gcache, uses two places to store its
+A general purpose cache, or gpc, uses two places to store its
 information: One is its value which is an alist, the other is in
-its symbol-plist with the key `gcache-get-spec', whose associated
+its symbol-plist with the key `gpc-get-spec', whose associated
 value is a hash-table.
 
 The hash table contains the specification of the cache. Its key
@@ -78,7 +78,7 @@ containing a key, an initial value, and a fetch function in this
 order.
 
 Here is a call example:
-\(gcache-defcache g-cache 'global
+\(gpc-defcache g-cache 'global
     \"a global cache.\"
     (current-buffer-name \"*scratch*\" (lambda () (buffer-name (current-buffer))))
     (pwd \"/\" (lambda ()
@@ -93,20 +93,20 @@ Here is a call example:
        (mapcar #'(lambda (entry)
                    (puthash (car entry) (cdr entry) ahash))
                ',body)
-       (put ',symbol 'gcache-cache-spec ahash))
+       (put ',symbol 'gpc-cache-spec ahash))
      (nalist-init ,symbol nil)
      (when (eq ,buffer-local 'buffer-local)
        (nalist-make-variable-buffer-local ,symbol))))
 
-(when gcache-namespace-polution
-  (defalias 'defcache 'gcache-defcache))
+(when gpc-namespace-polution
+  (defalias 'defcache 'gpc-defcache))
 
-(defmacro gcache-copy-init-values (cache)
+(defmacro gpc-copy-init-values (cache)
   "Copy the init values from CACHE's spec to CACHE."
-  `(nalist-init ,cache (gcache-util-make-alist-from-key-and-value0
-                        (gcache-get-spec ,cache))))
+  `(nalist-init ,cache (gpc-util-make-alist-from-key-and-value0
+                        (gpc-get-spec ,cache))))
 
-(defmacro gcache-fetch (key cache)
+(defmacro gpc-fetch (key cache)
   "Return the value of KEY in CACHE or with its fetch function."
   (let ((value (gensym))
         (new-value (gensym)))
@@ -114,60 +114,60 @@ Here is a call example:
        (if ,value
            ,value
          (let ((,new-value (funcall
-                            (gcache-spec-get-fetchfn
+                            (gpc-spec-get-fetchfn
                              ,key
                              ,cache))))
            (nalist-set ,key ,new-value ,cache)
            ,new-value)))))
 
-(cl-defmacro gcache-remove (key cache &key (testfn ''eq))
+(cl-defmacro gpc-remove (key cache &key (testfn ''eq))
   "Remove the entry with KEY from CACHE."
   `(nalist-remove ,key ,cache :testfn ,testfn))
 
-(defmacro gcache-clear (cache)
+(defmacro gpc-clear (cache)
   "Clear all keys and values in CACHE."
   `(nalist-clear ,cache))
 
-(cl-defun gcache-keyp (key cache &key (testfn 'eq))
+(cl-defun gpc-keyp (key cache &key (testfn 'eq))
   "Return t if CACHE has an entry with KEY, otherwise nil."
   (if (nalist-get key cache :testfn testfn) t nil))
 
-(defun gcache-pp (cache)
+(defun gpc-pp (cache)
   "Show the content of CACHE and return it."
   (message (pp cache))
   cache)
 
 ;; Spec functions
 
-(defmacro gcache-get-spec (cache)
+(defmacro gpc-get-spec (cache)
   "Return the spec of CACHE.
 
 A cache spec is a hash table."
-  `(get ',cache 'gcache-cache-spec))
+  `(get ',cache 'gpc-cache-spec))
 
-(defmacro gcache-pp-spec (cache)
+(defmacro gpc-pp-spec (cache)
   "Pp the spec of CACHE, and return it."
   (let ((alist (gensym)))
-    `(let ((,alist (gcache-util-hash-to-alist
-                    (gcache-get-spec ,cache))))
+    `(let ((,alist (gpc-util-hash-to-alist
+                    (gpc-get-spec ,cache))))
        (message (pp ,alist))
        ,alist)))
 
-(defmacro gcache-spec-set-entry (key initval fetchfn cache)
+(defmacro gpc-spec-set-entry (key initval fetchfn cache)
   "Set the CACHE's spec entry wchic contain  KEY, INITVAL, and FETCHFN."
-  `(puthash ,key (list ,initval ,fetchfn) (gcache-get-spec ,cache)))
+  `(puthash ,key (list ,initval ,fetchfn) (gpc-get-spec ,cache)))
 
-(defmacro gcache-spec-get-entry (key cache)
+(defmacro gpc-spec-get-entry (key cache)
   "Return a spec entry from CACHE, whose key is KEY."
-  `(gethash ,key (gcache-get-spec ,cache)))
+  `(gethash ,key (gpc-get-spec ,cache)))
 
-(defmacro gcache-spec-get-initval (key cache)
+(defmacro gpc-spec-get-initval (key cache)
   "Get the initial value function for KEY in CACHE's spec."
-  `(nth 0 (gcache-spec-get-entry ,key ,cache)))
+  `(nth 0 (gpc-spec-get-entry ,key ,cache)))
 
-(defmacro gcache-spec-get-fetchfn (key cache)
+(defmacro gpc-spec-get-fetchfn (key cache)
   "Get the fetch function for KEY in CACHE's spec."
-  `(nth 1 (gcache-spec-get-entry ,key ,cache)))
+  `(nth 1 (gpc-spec-get-entry ,key ,cache)))
 
-(provide 'gcache)
-;;; gcache.el ends here
+(provide 'gpc)
+;;; gpc.el ends here

@@ -101,10 +101,8 @@ Here is a call example:
 (when gcache-namespace-polution
   (defalias 'defcache 'gcache-defcache))
 
-(defmacro gcache-set-default-content (cache)
-  "Set the default content for CACHE from CACHE-SPEC.
-
-Populate keys and initvalues from its cache spec."
+(defmacro gcache-copy-init-values (cache)
+  "Copy the init values from CACHE's spec to CACHE."
   `(nalist-init ,cache (gcache-util-make-alist-from-key-and-value0
                         (gcache-get-spec ,cache))))
 
@@ -122,6 +120,10 @@ Populate keys and initvalues from its cache spec."
            (nalist-set ,key ,new-value ,cache)
            ,new-value)))))
 
+(cl-defmacro gcache-remove (key cache &key (testfn ''eq))
+  "Remove the entry with KEY from CACHE."
+  `(nalist-remove ,key ,cache :testfn ,testfn))
+
 (defmacro gcache-clear (cache)
   "Clear all keys and values in CACHE."
   `(nalist-clear ,cache))
@@ -134,10 +136,6 @@ Populate keys and initvalues from its cache spec."
   "Show the content of CACHE and return it."
   (message (pp cache))
   cache)
-
-(cl-defmacro gcache-remove (key cache &key (testfn ''eq))
-  "Remove the entry with KEY from CACHE."
-  `(nalist-remove ,key ,cache :testfn ,testfn))
 
 ;; Spec functions
 

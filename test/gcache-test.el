@@ -69,13 +69,13 @@
 
 (ert-deftest test-gcache-keyp ()
   (setup-gcache-defcache)
-  (gcache-set-default-content g-cache)
+  (gcache-copy-init-values g-cache)
   (should (eq (gcache-keyp 'spam g-cache) nil))
   (should (eq (gcache-keyp 'pwd g-cache) t)))
 
 (ert-deftest test-gcache-fetch ()
   (setup-gcache-defcache)
-  (gcache-set-default-content g-cache)
+  (gcache-copy-init-values g-cache)
   (should (equal (gcache-fetch 'pwd g-cache) "/"))
   (gcache-clear g-cache)
   (should (equal (s-chop-suffix "/" (gcache-fetch 'pwd g-cache))
@@ -120,7 +120,7 @@
 
 (ert-deftest test-gcache-set-default-content ()
   (setup-gcache-defcache)
-  (gcache-set-default-content g-cache)
+  (gcache-copy-init-values g-cache)
   (should (equal (gcache-fetch 'pwd g-cache)
                  "/")))
 

@@ -39,20 +39,17 @@ Currently, `defcache' is the only polution this option introduces.")
 
 ;; Util functions.
 
-(defun gpc-util-make-alist-from-key-and-value0 (hash)
-  "Make and return an alist from keys and value0 of HASH."
-  (let ((res nil))
-    (maphash #'(lambda (key value)
-                 (push (cons key (nth 0 value)) res))
-             hash)
-    res))
-
 (defun gpc-util-hash-to-alist (hash)
   "Return an alist made from keys and values of HASH."
-  (let ((res nil))
-    (maphash #'(lambda (k v) (nalist-set k v res)) hash)
-    res))
+  (let ((alist nil))
+    (maphash #'(lambda (k v) (nalist-set k v alist)) hash)
+    alist))
 
+(defun gpc-util-alist-to-hash (alist)
+  "Return a hash tablen made from keys and values of ALIST."
+  (let ((hash (make-hash-table)))
+    (nalist-map #'(lambda (k v) (puthash k v hash)) alist)
+    hash))
 
 ;; Core functions.
 
@@ -65,8 +62,8 @@ its symbol-plist with the key `gpc-get-spec', whose associated
 value is a hash-table.
 
 The hash table contains the specification of the cache. Its key
-is the cahche key, and the key's value is a list of its default
-value and fetch function.
+is the cahche key, and the key's value is a list of its
+default value and fetch function.
 
 The cache is initialized as an automatically buffer-local
 variable if the value of BUFFER-LOCAL is
@@ -89,11 +86,7 @@ Here is a call example:
   (declare (indent 2))
   `(prog1
        (defvar ,symbol nil ,doc-string)
-     (let ((ahash (make-hash-table)))
-       (mapcar #'(lambda (entry)
-                   (puthash (car entry) (cdr entry) ahash))
-               ',body)
-       (put ',symbol 'gpc-cache-spec ahash))
+     (gpc-set-spec ,symbol (gpc-util-alist-to-hash ',body))
      (nalist-init ,symbol nil)
      (when (eq ,buffer-local 'buffer-local)
        (nalist-make-variable-buffer-local ,symbol))))
@@ -103,8 +96,15 @@ Here is a call example:
 
 (defmacro gpc-copy-init-values (cache)
   "Copy the init values from CACHE's spec to CACHE."
-  `(nalist-init ,cache (gpc-util-make-alist-from-key-and-value0
-                        (gpc-get-spec ,cache))))
+  `(maphash #'(lambda (k v)
+                (nalist-set k (car v) ,cache))
+            (gpc-get-spec ,cache)))
+
+(defmacro gpc-val (key cache))
+
+(defmacro gpc-get (key cache))
+
+(defmacro gpc-set (key value cache))
 
 (defmacro gpc-fetch (key cache)
   "Return the value of KEY in CACHE or with its fetch function."
@@ -124,13 +124,23 @@ Here is a call example:
   "Remove the entry with KEY from CACHE."
   `(nalist-remove ,key ,cache :testfn ,testfn))
 
+(defmacro gpc-pairs (cache))
+
+(defmacro gpc-keys (cache))
+
+(defmacro gpc-values (cache))
+
 (defmacro gpc-clear (cache)
   "Clear all keys and values in CACHE."
   `(nalist-clear ,cache))
 
-(cl-defun gpc-keyp (key cache &key (testfn 'eq))
+(cl-defmacro gpc-keyp (key cache)
+  "Return t if KEY defined in CACHE spec, otherwise nil."
+  `(gpc-spec-keyp ,key ,cache))
+
+(cl-defun gpc-pairp (key cache &key (testfn 'eq))
   "Return t if CACHE has an entry with KEY, otherwise nil."
-  (if (nalist-get key cache :testfn testfn) t nil))
+  (nalist-get key cache :default nil :testfn testfn))
 
 (defun gpc-pp (cache)
   "Show the content of CACHE and return it."
@@ -138,6 +148,10 @@ Here is a call example:
   cache)
 
 ;; Spec functions
+
+(defmacro gpc-set-spec (cache spec-ht)
+  "Set SPEC-HT as the CACHE's spec."
+  `(put ',cache 'gpc-cache-spec ,spec-ht))
 
 (defmacro gpc-get-spec (cache)
   "Return the spec of CACHE.
@@ -158,7 +172,7 @@ A cache spec is a hash table."
   `(puthash ,key (list ,initval ,fetchfn) (gpc-get-spec ,cache)))
 
 (defmacro gpc-spec-get-entry (key cache)
-  "Return a spec entry from CACHE, whose key is KEY."
+  "Return a entry with KEY if it's in CACHE's spec, otherwise nil."
   `(gethash ,key (gpc-get-spec ,cache)))
 
 (defmacro gpc-spec-get-initval (key cache)
@@ -168,6 +182,10 @@ A cache spec is a hash table."
 (defmacro gpc-spec-get-fetchfn (key cache)
   "Get the fetch function for KEY in CACHE's spec."
   `(nth 1 (gpc-spec-get-entry ,key ,cache)))
+
+(defmacro gpc-spec-keyp (key cache)
+  "Return t if KEY is a key in CACHE's spec, othersise nil."
+  `(if (gpc-spec-get-entry ,key ,cache) t nil))
 
 (provide 'gpc)
 ;;; gpc.el ends here

@@ -127,19 +127,8 @@
 (ert-deftest test-gpc-remove ()
   (setup-gpc-defcache)
   (gpc-remove 'pwd g-cache)
-  (should (eq (gpc-keyp 'pwd g-cache)
+  (should (eq (gpc-pairp 'pwd g-cache)
               nil)))
-
-;;; Tests for helper functions.
-
-(ert-deftest test-gpc-util-make-alist-from-key-and-value0 ()
-  (setq hash-a (make-hash-table))
-  (puthash 'a '(1 10) hash-a)
-  (puthash 'b '(2 20) hash-a)
-  (should (nalist-set-equal-p
-           (gpc-util-make-alist-from-key-and-value0 hash-a)
-           '((a . 1) (b . 2))))
-  )
 
 ;;; Tests for test helper functions.
 

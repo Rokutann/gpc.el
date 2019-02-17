@@ -38,6 +38,20 @@
 In the current version, `defcache' is the only polution this
 option introduces.")
 
+;; Util functions.
+
+(defun gpc-util-hash-to-alist (hash)
+  "Return an alist made from keys and values of HASH."
+  (let ((alist nil))
+    (maphash #'(lambda (k v) (nalist-set k v alist)) hash)
+    alist))
+
+(defun gpc-util-alist-to-hash (alist)
+  "Return a hash tablen made from keys and values of ALIST."
+  (let ((hash (make-hash-table)))
+    (nalist-map #'(lambda (k v) (puthash k v hash)) alist)
+    hash))
+
 ;; Spec functions
 
 (defmacro gpc-set-spec (cache spec-ht)
@@ -77,20 +91,6 @@ A cache spec is a hash table."
 (defmacro gpc-spec-keyp (key cache)
   "Return t if KEY is a key in CACHE's spec, othersise nil."
   `(if (gpc-spec-get-entry ,key ,cache) t nil))
-
-;; Util functions.
-
-(defun gpc-util-hash-to-alist (hash)
-  "Return an alist made from keys and values of HASH."
-  (let ((alist nil))
-    (maphash #'(lambda (k v) (nalist-set k v alist)) hash)
-    alist))
-
-(defun gpc-util-alist-to-hash (alist)
-  "Return a hash tablen made from keys and values of ALIST."
-  (let ((hash (make-hash-table)))
-    (nalist-map #'(lambda (k v) (puthash k v hash)) alist)
-    hash))
 
 ;; Cache functions.
 

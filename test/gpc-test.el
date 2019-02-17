@@ -20,7 +20,11 @@
                (with-temp-buffer
                  (call-process "pwd" nil t)
                  (s-chop-suffix "\n" (buffer-string)))))
-    (true nil a-retriever))
+    (true nil a-retriever)
+    (uname "generic" (lambda ()
+                       (with-temp-buffer
+                         (call-process "uname" nil t)
+                         (s-chop-suffix "\n" (buffer-string))))))
 
   (gpc-defcache l-cache 'buffer-local
     "a buffer-local cache."
@@ -67,19 +71,30 @@
   (should (equal (documentation-property 'l-cache 'variable-documentation)
                  "a buffer-local cache.")))
 
+(ert-deftest test-gpc-val ()
+  (setup-gpc-defcache)
+  (gpc-copy-init-values g-cache)
+  (should (equal (gpc-val 'pwd g-cache) "/")))
+
 (ert-deftest test-gpc-keyp ()
   (setup-gpc-defcache)
   (gpc-copy-init-values g-cache)
   (should (eq (gpc-keyp 'spam g-cache) nil))
   (should (eq (gpc-keyp 'pwd g-cache) t)))
 
+
 (ert-deftest test-gpc-fetch ()
   (setup-gpc-defcache)
+  (equal (gpc-fetch 'uname g-cache)
+         "Darwin"))
+
+(ert-deftest test-gpc-get ()
+  (setup-gpc-defcache)
   (gpc-copy-init-values g-cache)
-  (should (equal (gpc-fetch 'pwd g-cache) "/"))
+  (should (equal (gpc-get 'uname g-cache) "generic"))
   (gpc-clear g-cache)
-  (should (equal (s-chop-suffix "/" (gpc-fetch 'pwd g-cache))
-                 (s-chop-suffix "/" (f-expand default-directory)))))
+  (should (equal (gpc-get 'uname g-cache)
+                 "Darwin")))
 
 (ert-deftest test-gpc-defcache ()
   (gpc-defcache acache 'global
@@ -98,7 +113,7 @@
   ;;                "/"))
   ;; (should (equal (gethash 'pwd acache)
   ;;                "/"))
-  ;;(should (equal (gpc-fetch 'pwd acache) "/"))
+  ;;(should (equal (gpc-get 'pwd acache) "/"))
   )
 
 (ert-deftest test-gpc-clear ()
@@ -118,10 +133,10 @@
   (should (equal (gethash 'true (gpc-get-spec g-cache))
                  '(nil a-retriever))))
 
-(ert-deftest test-gpc-set-default-content ()
+(ert-deftest test-gpc-copy-init-values ()
   (setup-gpc-defcache)
   (gpc-copy-init-values g-cache)
-  (should (equal (gpc-fetch 'pwd g-cache)
+  (should (equal (gpc-val 'pwd g-cache)
                  "/")))
 
 (ert-deftest test-gpc-remove ()

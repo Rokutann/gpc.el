@@ -35,7 +35,8 @@
 (defvar gpc-namespace-polution nil
   "Allow to polute the namespace if t, otherwise don't.
 
-Currently, `defcache' is the only polution this option introduces.")
+In the current version, `defcache' is the only polution this
+option introduces.")
 
 ;; Util functions.
 
@@ -100,35 +101,44 @@ Here is a call example:
                 (nalist-set k (car v) ,cache))
             (gpc-get-spec ,cache)))
 
-(defmacro gpc-val (key cache))
+(defalias 'gpc-val 'nalist-get
+  "Return the value of KEY in CACHE if exists, otherwise nil.
 
-(defmacro gpc-get (key cache))
-
-(defmacro gpc-set (key value cache))
+This is an alias of `nalist-get'.")
 
 (defmacro gpc-fetch (key cache)
-  "Return the value of KEY in CACHE or with its fetch function."
-  (let ((value (gensym))
-        (new-value (gensym)))
-    `(let ((,value (cdr (assoc ,key ,cache))))
-       (if ,value
-           ,value
-         (let ((,new-value (funcall
-                            (gpc-spec-get-fetchfn
-                             ,key
-                             ,cache))))
-           (nalist-set ,key ,new-value ,cache)
-           ,new-value)))))
+  "Fetch the value of KEY in CACHE with its fetch function.
+
+It reurns the value associated to KEY."
+  `(nalist-set ,key (funcall (gpc-spec-get-fetchfn ,key ,cache)) ,cache))
+
+(defalias 'gpc-set 'nalist-set
+  "Set the value of KEY in CACHE (NALIST) to VALUE.
+
+Add a new pair to CACHE if KEY doesn't exist in it.
+
+This is an alias of `nalist-set'.")
+
+(cl-defmacro gpc-get (key cache &key (force nil))
+  "Return the value of KEY in CACHE by calling the fetchfn if needed."
+  `(if ,force
+       (gpc-fetch ,key ,cache)
+     (if (gpc-pairp ,key ,cache)
+         (gpc-val ,key ,cache)
+       (gpc-fetch ,key ,cache))))
 
 (cl-defmacro gpc-remove (key cache &key (testfn ''eq))
   "Remove the entry with KEY from CACHE."
   `(nalist-remove ,key ,cache :testfn ,testfn))
 
-(defmacro gpc-pairs (cache))
+(defalias 'gpc-pairs 'nalist-pairs
+  "Return a list consisting all the pairs in NALIST (CACHE).")
 
-(defmacro gpc-keys (cache))
+(defalias 'gpc-keys 'nalist-keys
+  "Return a list consisting all the keys in NALIST (CACHE).")
 
-(defmacro gpc-values (cache))
+(defalias 'gpc-values 'nalist-values
+  "Return a list consisting all the values in NALIST (CACHE).")
 
 (defmacro gpc-clear (cache)
   "Clear all keys and values in CACHE."

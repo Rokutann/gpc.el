@@ -95,6 +95,19 @@ Here is a call example:
 (when gpc-namespace-polution
   (defalias 'defcache 'gpc-defcache))
 
+(defmacro gpc-init (symbol spec-list)
+  "Initialize SYMBOL as a general purpose cache with SPEC-LIST.
+
+The value of SYMBOL is a named association list."
+  (declare (indent 1))
+  `(progn
+     (gpc-set-spec ,symbol (gpc-util-alist-to-hash ,spec-list))
+     (nalist-init ,symbol nil)))
+
+(defalias 'gpc-make-local-variable 'nalist-make-local-variable)
+
+(defalias 'gpc-make-variable-buffer-local 'nalist-make-variable-buffer-local)
+
 (defmacro gpc-copy-init-values (cache)
   "Copy the init values from CACHE's spec to CACHE."
   `(maphash #'(lambda (k v)

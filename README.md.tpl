@@ -20,6 +20,18 @@ your Emacs config:
 {{gpc-init}}
 
 ```lisp
+(gpc-init acache
+  '((buffer-size 0 (lambda ()
+                     (buffer-size)))
+    (uptime nil (lambda ()
+                  (with-temp-buffer
+                    (call-process "uptime" nil t)
+                    (s-chop-suffix "\n" (buffer-string)))))
+    (joke "How do you make holy water? You boil the hell out of it."
+          (lambda ()
+            (with-temp-buffer
+              (call-process "curl" nil t nil "-sb" "-H" "Accept: text/plain" "https://icanhazdadjoke.com/")
+              (s-chop-suffix "\n" (buffer-string)))))))
 ```
 
 #### defcache `(symbol buffer-local doc-string &rest spec-list)`

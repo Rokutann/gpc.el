@@ -52,50 +52,7 @@ option introduces.")
     (nalist-map #'(lambda (k v) (puthash k v ht)) alist)
     ht))
 
-;; Spec functions
-
-(defmacro gpc-set-spec (cache hash-table)
-  "Set HASH-TABLE  as the CACHE's spec.
-
-HASH-TABLE should contain a cache spec following the spec
-description format.  See `gpc-init' for the detail."
-  `(put ',cache 'gpc-cache-spec ,hash-table))
-
-(defmacro gpc-get-spec (cache)
-  "Return the spec of CACHE.
-
-A cache spec is a hash table."
-  `(get ',cache 'gpc-cache-spec))
-
-(defmacro gpc-pp-spec (cache)
-  "Pretty print the spec of CACHE, and return it."
-  (let ((alist (gensym)))
-    `(let ((,alist (gpc-util-hash-to-alist
-                    (gpc-get-spec ,cache))))
-       (message (pp ,alist))
-       ,alist)))
-
-(defmacro gpc-spec-set-entry (key initval fetchfn cache)
-  "Set the CACHE's spec entry whose key is KEY to have the value (INITVAL FETCHFN)."
-  `(puthash ,key (list ,initval ,fetchfn) (gpc-get-spec ,cache)))
-
-(defmacro gpc-spec-get-entry (key cache)
-  "Return the entry with KEY if it's in the CACHE's spec, otherwise nil."
-  `(gethash ,key (gpc-get-spec ,cache)))
-
-(defmacro gpc-spec-get-initval (key cache)
-  "Get the initval of the pair with KEY in the CACHE's spec."
-  `(nth 0 (gpc-spec-get-entry ,key ,cache)))
-
-(defmacro gpc-spec-get-fetchfn (key cache)
-  "Get the fetch function of the pair with KEY in the CACHE's spec."
-  `(nth 1 (gpc-spec-get-entry ,key ,cache)))
-
-(defmacro gpc-spec-keyp (key cache)
-  "Return t if KEY is a key in the CACHE's spec, otherwise nil."
-  `(if (gpc-spec-get-entry ,key ,cache) t nil))
-
-;; Cache functions.
+;; Initilize functions.
 
 (defmacro gpc-init (symbol spec-list)
   "Initialize SYMBOL as a general purpose cache with SPEC-LIST.
@@ -162,6 +119,51 @@ detail."
 
 (when gpc-namespace-pollution
   (defalias 'defgpc 'gpc-defgpc))
+
+;; Cache pec access functions
+
+(defmacro gpc-set-spec (cache hash-table)
+  "Set HASH-TABLE  as the CACHE's spec.
+
+HASH-TABLE should contain a cache spec following the spec
+description format.  See `gpc-init' for the detail."
+  `(put ',cache 'gpc-cache-spec ,hash-table))
+
+(defmacro gpc-get-spec (cache)
+  "Return the spec of CACHE.
+
+A cache spec is a hash table."
+  `(get ',cache 'gpc-cache-spec))
+
+(defmacro gpc-pp-spec (cache)
+  "Pretty print the spec of CACHE, and return it."
+  (let ((alist (gensym)))
+    `(let ((,alist (gpc-util-hash-to-alist
+                    (gpc-get-spec ,cache))))
+       (message (pp ,alist))
+       ,alist)))
+
+(defmacro gpc-spec-set-entry (key initval fetchfn cache)
+  "Set the CACHE's spec entry whose key is KEY to have the value (INITVAL FETCHFN)."
+  `(puthash ,key (list ,initval ,fetchfn) (gpc-get-spec ,cache)))
+
+(defmacro gpc-spec-get-entry (key cache)
+  "Return the entry with KEY if it's in the CACHE's spec, otherwise nil."
+  `(gethash ,key (gpc-get-spec ,cache)))
+
+(defmacro gpc-spec-get-initval (key cache)
+  "Get the initval of the pair with KEY in the CACHE's spec."
+  `(nth 0 (gpc-spec-get-entry ,key ,cache)))
+
+(defmacro gpc-spec-get-fetchfn (key cache)
+  "Get the fetch function of the pair with KEY in the CACHE's spec."
+  `(nth 1 (gpc-spec-get-entry ,key ,cache)))
+
+(defmacro gpc-spec-keyp (key cache)
+  "Return t if KEY is a key in the CACHE's spec, otherwise nil."
+  `(if (gpc-spec-get-entry ,key ,cache) t nil))
+
+;; Cache content access functions
 
 (defalias 'gpc-val 'nalist-get)
 

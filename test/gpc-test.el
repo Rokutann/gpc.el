@@ -13,7 +13,7 @@
   t)
 
 (defun setup-gpc-defcache ()
-  (gpc-defcache g-cache 'global
+  (gpc-defgpc g-cache 'global
     "a global cache."
     (current-buffer-name "*scratch*" (lambda () (buffer-name (current-buffer))))
     (pwd "/" (lambda ()
@@ -26,7 +26,7 @@
                          (call-process "uname" nil t)
                          (s-chop-suffix "\n" (buffer-string))))))
 
-  (gpc-defcache l-cache 'buffer-local
+  (gpc-defgpc l-cache 'buffer-local
     "a buffer-local cache."
     (current-buffer-name "*scratch*" (lambda () (buffer-name (current-buffer))))
     (pwd "/" (lambda ()
@@ -37,10 +37,10 @@
 
 ;;; Tests.
 
-(ert-deftest test-namespace-polution ()
-  (should (if gpc-namespace-polution
-              (eq (fboundp 'defcache) t)
-            (eq (fboundp 'defacache) nil))))
+(ert-deftest test-namespace-pollution ()
+  (should (if gpc-namespace-pollution
+              (eq (fboundp 'defgpc) t)
+            (eq (fboundp 'defgpc) nil))))
 
 (ert-deftest test-gpc-spec-get ()
   (setup-gpc-defcache)
@@ -76,11 +76,11 @@
   (gpc-copy-init-values g-cache)
   (should (equal (gpc-val 'pwd g-cache) "/")))
 
-(ert-deftest test-gpc-keyp ()
+(ert-deftest test-gpc-spec-keyp ()
   (setup-gpc-defcache)
   (gpc-copy-init-values g-cache)
-  (should (eq (gpc-keyp 'spam g-cache) nil))
-  (should (eq (gpc-keyp 'pwd g-cache) t)))
+  (should (eq (gpc-spec-keyp 'spam g-cache) nil))
+  (should (eq (gpc-spec-keyp 'pwd g-cache) t)))
 
 
 (ert-deftest test-gpc-fetch ()
@@ -97,7 +97,7 @@
                  "Darwin")))
 
 (ert-deftest test-gpc-defcache ()
-  (gpc-defcache acache 'global
+  (gpc-defgpc acache 'global
     ""
     (current-buffer-name "*scratch*" (lambda () (buffer-name (current-buffer))))
     (pwd "/" (lambda ()
@@ -142,7 +142,7 @@
 (ert-deftest test-gpc-remove ()
   (setup-gpc-defcache)
   (gpc-remove 'pwd g-cache)
-  (should (eq (gpc-pairp 'pwd g-cache)
+  (should (eq (gpc-pair-exist-p 'pwd g-cache)
               nil)))
 
 ;;; Tests for test helper functions.

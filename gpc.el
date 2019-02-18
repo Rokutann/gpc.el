@@ -1,9 +1,9 @@
-;;; gpc.el --- A general purpose cache fascility.   -*- lexical-binding: t; -*-
+;;; gpc.el --- A general purpose cache facility.   -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Cyriakus "Mukuge" Hill
 
 ;; Author: Cyriakus "Mukuge" Hill <cyriakus.h@gmail.com>
-;; URL: https://github.com/mukuge/el-cache
+;; URL: https://github.com/mukuge/gpc.el
 ;; Keywords: lisp
 ;; Package-Version: 0.0.1
 ;; Package-Requires: ((emacs "26.1"))
@@ -23,7 +23,7 @@
 
 ;;; Commentary:
 
-;; A general purpose cache fascility for Emaacs.
+;; A general purpose cache facility for Emacs.
 
 ;;; Code:
 
@@ -32,31 +32,34 @@
 
 ;; User facing variables.
 
-(defvar gpc-namespace-polution nil
-  "Allow to polute the namespace if t, otherwise don't.
+(defvar gpc-namespace-pollution nil
+  "Allow to pollute the namespace if t, otherwise don't.
 
-In the current version, `defcache' is the only polution this
+In the current version, `defgpc' is the only pollution this
 option introduces.")
 
-;; Util functions.
+;; Utility functions.
 
-(defun gpc-util-hash-to-alist (hash)
-  "Return an alist made from keys and values of HASH."
+(defun gpc-util-hash-to-alist (hash-table)
+  "Return an alist made from keys and values of HASH-TABLE."
   (let ((alist nil))
-    (maphash #'(lambda (k v) (nalist-set k v alist)) hash)
+    (maphash #'(lambda (k v) (nalist-set k v alist)) hash-table)
     alist))
 
 (defun gpc-util-alist-to-hash (alist)
-  "Return a hash tablen made from keys and values of ALIST."
-  (let ((hash (make-hash-table)))
-    (nalist-map #'(lambda (k v) (puthash k v hash)) alist)
-    hash))
+  "Return a hash table made of keys and values of ALIST."
+  (let ((ht (make-hash-table)))
+    (nalist-map #'(lambda (k v) (puthash k v ht)) alist)
+    ht))
 
 ;; Spec functions
 
-(defmacro gpc-set-spec (cache spec-ht)
-  "Set SPEC-HT as the CACHE's spec."
-  `(put ',cache 'gpc-cache-spec ,spec-ht))
+(defmacro gpc-set-spec (cache hash-table)
+  "Set HASH-TABLE  as the CACHE's spec.
+
+HASH-TABLE should contain a cache spec following the spec
+description format.  See `gpc-init' for the detail."
+  `(put ',cache 'gpc-cache-spec ,hash-table))
 
 (defmacro gpc-get-spec (cache)
   "Return the spec of CACHE.
@@ -65,7 +68,7 @@ A cache spec is a hash table."
   `(get ',cache 'gpc-cache-spec))
 
 (defmacro gpc-pp-spec (cache)
-  "Pp the spec of CACHE, and return it."
+  "Pretty print the spec of CACHE, and return it."
   (let ((alist (gensym)))
     `(let ((,alist (gpc-util-hash-to-alist
                     (gpc-get-spec ,cache))))
@@ -73,23 +76,23 @@ A cache spec is a hash table."
        ,alist)))
 
 (defmacro gpc-spec-set-entry (key initval fetchfn cache)
-  "Set the CACHE's spec entry wchic contain  KEY, INITVAL, and FETCHFN."
+  "Set the CACHE's spec entry whose key is KEY to have the value (INITVAL FETCHFN)."
   `(puthash ,key (list ,initval ,fetchfn) (gpc-get-spec ,cache)))
 
 (defmacro gpc-spec-get-entry (key cache)
-  "Return a entry with KEY if it's in CACHE's spec, otherwise nil."
+  "Return the entry with KEY if it's in the CACHE's spec, otherwise nil."
   `(gethash ,key (gpc-get-spec ,cache)))
 
 (defmacro gpc-spec-get-initval (key cache)
-  "Get the initial value function for KEY in CACHE's spec."
+  "Get the initval of the pair with KEY in the CACHE's spec."
   `(nth 0 (gpc-spec-get-entry ,key ,cache)))
 
 (defmacro gpc-spec-get-fetchfn (key cache)
-  "Get the fetch function for KEY in CACHE's spec."
+  "Get the fetch function of the pair with KEY in the CACHE's spec."
   `(nth 1 (gpc-spec-get-entry ,key ,cache)))
 
 (defmacro gpc-spec-keyp (key cache)
-  "Return t if KEY is a key in CACHE's spec, othersise nil."
+  "Return t if KEY is a key in the CACHE's spec, otherwise nil."
   `(if (gpc-spec-get-entry ,key ,cache) t nil))
 
 ;; Cache functions.
@@ -97,7 +100,27 @@ A cache spec is a hash table."
 (defmacro gpc-init (symbol spec-list)
   "Initialize SYMBOL as a general purpose cache with SPEC-LIST.
 
-The value of SYMBOL is a named association list."
+A general purpose cache, or `gpc', is a cache facility which
+enables you to store return values of fetch functions for future
+reuse.  It's like memoization inside-out.
+
+A cache entity in `gpc' is a data structure with a name, which
+utilizes symbol's features to implement its mechanism between
+cache and its specification.
+
+It uses two places to store information: One is the ordinary
+variable binding to the symbol, which keeps the content of cache,
+the other is the symbol's property list, where the specification
+of cache is associated with the key `gpc-cache-spec'.
+
+As for the cache content, a gpc is a named association list, or
+`nalist'.  Most of the cache access functions in `gpc' is
+actually aliases to the corresponding functions in nalist.'
+
+A cache spec is a hash table whose keys are the keys of the cache
+content, and the value associated with each key is in the
+format (initval fetchfn), or a list of its initial value and
+fetch function."
   (declare (indent 1))
   `(progn
      (gpc-set-spec ,symbol (gpc-util-alist-to-hash ,spec-list))
@@ -113,100 +136,67 @@ The value of SYMBOL is a named association list."
                 (nalist-set k (car v) ,cache))
             (gpc-get-spec ,cache)))
 
-(cl-defmacro gpc-defcache (symbol buffer-local doc-string &rest body)
+(cl-defmacro gpc-defgpc (symbol buffer-local doc-string &rest spec-list)
   "Define SYMBOL as a general purpose cache or gpc, and return SYMBOL.
 
-A general purpose cache, or gpc, uses two places to store its
-information: One is its value which is an alist, the other is in
-its symbol-plist with the key `gpc-get-spec', whose associated
-value is a hash-table.
-
-The hash table contains the specification of the cache. Its key
-is the cahche key, and the key's value is a list of its
-default value and fetch function.
+This macro uses `defvar' internally. So, the resulting variable
+is special and can have a DOC-STRING.  It makes the variable
+automatically buffer-local if BUFFER-LOCAL is :buffer-local,
+otherwise global.
 
 The cache is initialized as an automatically buffer-local
 variable if the value of BUFFER-LOCAL is
 'buffer-local. Otherwise, as a global variable defined by
 `defvar'.
 
-The BODY defines the spec of the cache. Each line of it is a list
-containing a key, an initial value, and a fetch function in this
-order.
-
-Here is a call example:
-\(gpc-defcache g-cache 'global
-    \"a global cache.\"
-    (current-buffer-name \"*scratch*\" (lambda () (buffer-name (current-buffer))))
-    (pwd \"/\" (lambda ()
-               (with-temp-buffer
-                 (call-process \"pwd\" nil t)
-                 (s-chop-suffix \"\\n\" (buffer-string)))))
-    (true nil a-retriever))"
+SPEC-LIST defines the specification of the cache: the initial
+value and fetch function for each key.  See `gpc-init' for the
+detail."
   (declare (indent 2))
   `(prog1
        (defvar ,symbol nil ,doc-string)
-     (gpc-set-spec ,symbol (gpc-util-alist-to-hash ',body))
+     (gpc-set-spec ,symbol (gpc-util-alist-to-hash ',spec-list))
      (nalist-init ,symbol nil)
      (when (eq ,buffer-local 'buffer-local)
        (nalist-make-variable-buffer-local ,symbol))))
 
-(when gpc-namespace-polution
-  (defalias 'defcache 'gpc-defcache))
+(when gpc-namespace-pollution
+  (defalias 'defgpc 'gpc-defgpc))
 
-(defalias 'gpc-val 'nalist-get
-  "Return the value of KEY in CACHE if exists, otherwise nil.
-
-This is an alias of `nalist-get'.")
+(defalias 'gpc-val 'nalist-get)
 
 (defmacro gpc-fetch (key cache)
-  "Fetch the value of KEY in CACHE with its fetch function.
+"Fetch the value of KEY in CACHE with its fetch function.
 
-It reurns the value associated to KEY."
-  `(nalist-set ,key (funcall (gpc-spec-get-fetchfn ,key ,cache)) ,cache))
+It returns the value associated with KEY."
+`(nalist-set ,key (funcall (gpc-spec-get-fetchfn ,key ,cache)) ,cache))
 
 (cl-defmacro gpc-get (key cache &key (force nil))
   "Return the value of KEY in CACHE by calling the fetchfn if needed."
   `(if ,force
        (gpc-fetch ,key ,cache)
-     (if (gpc-pairp ,key ,cache)
+     (if (gpc-pair-exist-p ,key ,cache)
          (gpc-val ,key ,cache)
        (gpc-fetch ,key ,cache))))
 
-(defalias 'gpc-set 'nalist-set
-  "Set the value of KEY in CACHE (NALIST) to VALUE.
+(defalias 'gpc-set 'nalist-set)
 
-Add a new pair to CACHE if KEY doesn't exist in it.
+(defalias 'gpc-remove 'nalist-remove)
 
-This is an alias of `nalist-set'.")
+(defalias 'gpc-clear 'nalist-clear)
 
-(cl-defmacro gpc-remove (key cache &key (testfn ''eq))
-  "Remove the entry with KEY from CACHE."
-  `(nalist-remove ,key ,cache :testfn ,testfn))
+(defalias 'gpc-pairs 'nalist-pairs)
 
-(defmacro gpc-clear (cache)
-  "Clear all keys and values in CACHE."
-  `(nalist-clear ,cache))
+(defalias 'gpc-keys 'nalist-keys)
 
-(defalias 'gpc-pairs 'nalist-pairs
-  "Return a list consisting all the pairs in NALIST (CACHE).")
+(defalias 'gpc-values 'nalist-values)
 
-(defalias 'gpc-keys 'nalist-keys
-  "Return a list consisting all the keys in NALIST (CACHE).")
-
-(defalias 'gpc-values 'nalist-values
-  "Return a list consisting all the values in NALIST (CACHE).")
-
-(cl-defmacro gpc-keyp (key cache)
-  "Return t if KEY defined in CACHE spec, otherwise nil."
-  `(gpc-spec-keyp ,key ,cache))
-
-(cl-defun gpc-pairp (key cache &key (testfn 'eq))
+(cl-defun gpc-pair-exist-p (key cache &key (testfn 'eq))
   "Return t if CACHE has an entry with KEY, otherwise nil."
   (nalist-get key cache :default nil :testfn testfn))
 
 (defun gpc-pp (cache)
-  "Show the content of CACHE and return it."
+  "Pretty print and return the content of CACHE."
   (message (pp cache))
   cache)
 

@@ -1,20 +1,25 @@
 ;;; test-helper.el --- Helpers for elcache-test.el
 
-(defun is-subset-hash-of (hash-a hash-b)
-  "Test if HASH-A is a subset of HASH-B."
-  (let ((res t))
-    (maphash #'(lambda (key value)
-                 (unless (equal (gethash key hash-b)
-                                value)
-                   (setq res nil)))
-             hash-a)
-    res))
+(defun gpc-helper-compose-generate-buffer-forms (sym-list)
+  "Compose forms from SYM-LIST for `with-temp-buffers'."
+  (mapcar #'(lambda (sym)
+              `(setq ,sym (generate-new-buffer "temp")))
+          sym-list))
 
+(defun gpc-helper-compose-kill-buffer-forms (sym-list)
+  "Compose forms from SYM-LIST for `with-temp-buffers'."
+  (mapcar #'(lambda (sym)
+              `(kill-buffer ,sym))
+          sym-list))
 
-(defun hash-equal (hash-a hash-b)
-  "Test is HASH-A and HASH-B are equal."
-  (and (is-subset-hash-of hash-a hash-b)
-       (is-subset-hash-of hash-b hash-a)))
+(defmacro with-temp-buffers (sym-list &rest body)
+  "Generate new buffers, bind them to symbols in SYM-LIST, and do BODY."
+  (declare (indent 1))
+  `(unwind-protect
+       (progn
+         ,@(gpc-helper-compose-generate-buffer-forms sym-list)
+         ,@body)
+     ,@(gpc-helper-compose-kill-buffer-forms sym-list)))
 
 ;; Local Variables:
 ;; flycheck-disabled-checkers: (emacs-lisp-checkdoc)

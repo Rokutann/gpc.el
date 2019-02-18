@@ -30,14 +30,6 @@
 (require 'cl-lib)
 (require 'nalist)
 
-;; User facing variables.
-
-(defvar gpc-namespace-pollution nil
-  "Allow to pollute the namespace if t, otherwise don't.
-
-In the current version, `defgpc' is the only pollution this
-option introduces.")
-
 ;; Utility functions.
 
 (defun gpc-util-hash-to-alist (hash-table)
@@ -116,9 +108,6 @@ detail."
      (nalist-init ,symbol nil)
      (when (eq ,buffer-local :buffer-local)
        (gpc-make-variable-buffer-local ,symbol))))
-
-(when gpc-namespace-pollution
-  (defalias 'defgpc 'gpc-defgpc))
 
 ;; Cache spec access functions
 

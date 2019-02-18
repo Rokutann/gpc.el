@@ -70,8 +70,8 @@ variable binding to the symbol, which keeps the content of cache,
 the other is the symbol's property list, where the specification
 of cache is associated with the key `gpc-cache-spec'.
 
-As for the cache content, a gpc is a named association list, or
-`nalist'.  Most of the cache access functions in `gpc' is
+As for the cache content, a gpc is just a named association list,
+or `nalist'.  Most of the cache access functions in `gpc' is
 actually aliases to the corresponding functions in nalist.'
 
 A cache spec is a hash table whose keys are the keys of the cache
@@ -79,16 +79,16 @@ content, and the value associated with each key is in the
 format (initval fetchfn), or a list of its initial value and
 fetch function."
   (declare (indent 1))
-  `(progn
-     (gpc-set-spec ,symbol (gpc-util-alist-to-hash ,spec-list))
-     (nalist-init ,symbol nil)))
+  `(prog1
+       (nalist-init ,symbol nil)
+     (gpc-set-spec ,symbol (gpc-util-alist-to-hash ,spec-list))))
 
 (defalias 'gpc-make-local-variable 'nalist-make-local-variable)
 
 (defalias 'gpc-make-variable-buffer-local 'nalist-make-variable-buffer-local)
 
-(defmacro gpc-copy-init-values (cache)
-  "Copy the init values from CACHE's spec to CACHE."
+(defmacro gpc-overwrite-with-initvals (cache)
+  "Overwrite the cache content with initvals in the CACHE's spec."
   `(maphash #'(lambda (k v)
                 (nalist-set k (car v) ,cache))
             (gpc-get-spec ,cache)))

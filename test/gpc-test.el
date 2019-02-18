@@ -3,6 +3,7 @@
 (require 'ert)
 (require 'f)
 (require 's)
+(require 'nalist)
 
 (load (f-expand "gpc.el" default-directory))
 
@@ -83,6 +84,106 @@
   (gpc-spec-set-entry 'a 'b '(lambda () 'c) gpc-var)
   (should (equal (gpc-spec-get-fetchfn 'a gpc-var) '(lambda () 'c))))
 
+(ert-deftest gpc-spec-keyp-test/nil ()
+  (unintern "gpc-var")
+  (setq gpc-var nil)
+  (gpc-set-spec gpc-var (make-hash-table))
+  (should-not (gpc-spec-keyp 'a gpc-var)))
+
+(ert-deftest gpc-spec-keyp-test/existent-key ()
+  (unintern "gpc-var")
+  (setq gpc-var nil)
+  (gpc-set-spec gpc-var (make-hash-table))
+  (gpc-spec-set-entry 'a 'b '(lambda () 'c) gpc-var)
+  (should (gpc-spec-keyp 'a gpc-var)))
+
+(ert-deftest gpc-spec-keyp-test/non-existent-key ()
+  (unintern "gpc-var")
+  (setq gpc-var nil)
+  (gpc-set-spec gpc-var (make-hash-table))
+  (gpc-spec-set-entry 'a 'b '(lambda () 'c) gpc-var)
+  (should-not (gpc-spec-keyp 'b gpc-var)))
+
+(ert-deftest gpc-util-hash-to-alist/hash-table-with-no-entry ()
+  (setq ht (make-hash-table))
+  (should (eq (gpc-util-hash-to-alist ht) nil)))
+
+(ert-deftest gpc-util-hash-to-alist/hash-table-with-one-entry ()
+  (setq ht (make-hash-table))
+  (puthash 'a 'b ht)
+  (should (equal (gpc-util-hash-to-alist ht) '((a . b)))))
+
+(ert-deftest gpc-util-hash-to-alist/hash-table-with-two-entries ()
+  (setq ht (make-hash-table))
+  (puthash 'a 'b ht)
+  (puthash 'c 'd ht)
+  (should (nalist-set-equal-p (gpc-util-hash-to-alist ht) '((a . b) (c . d)))))
+
+(ert-deftest gpc-util-alist-to-hash/alist-is-nil ()
+  (setq alist nil)
+  (should (= (hash-table-count (gpc-util-alist-to-hash alist)) 0)))
+
+(ert-deftest gpc-util-alist-to-hash/alist-with-one-pair ()
+  (setq alist '((a . b)))
+  (setq ht (gpc-util-alist-to-hash alist))
+  (should (= (hash-table-count ht) 1))
+  (should (eq (gethash 'a ht) 'b)))
+
+(ert-deftest gpc-util-alist-to-hash/alist-with-two-pairs ()
+  (setq alist '((a . b) (c . d)))
+  (setq ht (gpc-util-alist-to-hash alist))
+  (should (= (hash-table-count ht) 2))
+  (should (eq (gethash 'a ht) 'b))
+  (should (eq (gethash 'c ht) 'd)))
+
+(ert-deftest gpc-init-test/spec-with-no-entry ()
+  (unintern "gpc-var")
+  (gpc-init gpc-var nil)
+  (should (eq gpc-var nil))
+  (should (eq (hash-table-count (gpc-get-spec gpc-var)) 0)))
+
+(ert-deftest gpc-init-test/spec-with-one-entry ()
+  (unintern "gpc-var")
+  (gpc-init gpc-var '((a b (lambda () nil))))
+  (should (eq gpc-var nil))
+  (should (eq (gpc-spec-get-initval 'a gpc-var) 'b))
+  (should (equal (gpc-spec-get-fetchfn 'a gpc-var) '(lambda () nil))))
+
+(ert-deftest gpc-init-test/spec-with-two-entries ()
+  (unintern "gpc-var")
+  (gpc-init gpc-var '((a b (lambda () nil))
+                      (c d (lambda () t))))
+  (should (eq gpc-var nil))
+  (should (eq (gpc-spec-get-initval 'a gpc-var) 'b))
+  (should (eq (gpc-spec-get-initval 'c gpc-var) 'd))
+  (should (equal (gpc-spec-get-fetchfn 'a gpc-var) '(lambda () nil)))
+  (should (equal (gpc-spec-get-fetchfn 'c gpc-var) '(lambda () t))))
+
+(ert-deftest gpc-overwrite-with-initvals-test/spec-with-no-entry ()
+  (unintern "gpc-var")
+  (gpc-init gpc-var nil)
+  (gpc-overwrite-with-initvals gpc-var)
+  (should (eq gpc-var nil)))
+
+(ert-deftest gpc-overwrite-with-initvals-test/spec-with-one-entry ()
+  (unintern "gpc-var")
+  (gpc-init gpc-var '((a b (lambda () nil))))
+  (gpc-overwrite-with-initvals gpc-var)
+  (should (= (length gpc-var) 1))
+  (should (eq (gpc-val 'a gpc-var) 'b)))
+
+(ert-deftest gpc-overwrite-with-initvals-test/spec-with-two-entries ()
+  (unintern "gpc-var")
+  (gpc-init gpc-var '((a b (lambda () nil))
+                      (c d (lambda () t))))
+  (gpc-overwrite-with-initvals gpc-var)
+  (should (= (length gpc-var) 2))
+  (should (eq (gpc-val 'a gpc-var) 'b))
+  (should (eq (gpc-val 'c gpc-var) 'd)))
+
+
+;;; Refactored upto here.
+
 (ert-deftest test-namespace-pollution ()
   (should (if gpc-namespace-pollution
               (eq (fboundp 'defgpc) t)
@@ -119,12 +220,12 @@
 
 (ert-deftest test-gpc-val ()
   (setup-gpc-defcache)
-  (gpc-copy-init-values g-cache)
+  (gpc-overwrite-with-initvals g-cache)
   (should (equal (gpc-val 'pwd g-cache) "/")))
 
 (ert-deftest test-gpc-spec-keyp ()
   (setup-gpc-defcache)
-  (gpc-copy-init-values g-cache)
+  (gpc-overwrite-with-initvals g-cache)
   (should (eq (gpc-spec-keyp 'spam g-cache) nil))
   (should (eq (gpc-spec-keyp 'pwd g-cache) t)))
 
@@ -136,7 +237,7 @@
 
 (ert-deftest test-gpc-get ()
   (setup-gpc-defcache)
-  (gpc-copy-init-values g-cache)
+  (gpc-overwrite-with-initvals g-cache)
   (should (equal (gpc-get 'uname g-cache) "generic"))
   (gpc-clear g-cache)
   (should (equal (gpc-get 'uname g-cache)
@@ -181,7 +282,7 @@
 
 (ert-deftest test-gpc-copy-init-values ()
   (setup-gpc-defcache)
-  (gpc-copy-init-values g-cache)
+  (gpc-overwrite-with-initvals g-cache)
   (should (equal (gpc-val 'pwd g-cache)
                  "/")))
 

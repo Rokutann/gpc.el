@@ -1,12 +1,5 @@
 ;;; gpc-test.el --- Tests for gpc
 
-;; (require 'ert)
-;; (require 'f)
-;; (require 's)
-;; (require 'nalist)
-
-;; (load (f-expand "gpc.el" default-directory))
-
 ;;; Tests.
 
 (ert-deftest gpc-set-spec-test/hash-table-generator ()
@@ -154,22 +147,28 @@
 
 (ert-deftest gpc-fetch-test ()
   (unintern "gpc-var")
-  (gpc-init gpc-var '((uname "Hurd" (lambda ()
-                                      (with-temp-buffer
-                                        (call-process "uname" nil t)
-                                        (s-chop-suffix "\n" (buffer-string)))))))
-  (should (equal (gpc-fetch 'uname gpc-var) "Darwin")))
+  (setq system-value (with-temp-buffer
+                       (call-process "uname" nil t)
+                       (s-chop-suffix "\n" (buffer-string))))
+  (gpc-init gpc-var '((system "Hurd" (lambda ()
+                                       (with-temp-buffer
+                                         (call-process "uname" nil t)
+                                         (s-chop-suffix "\n" (buffer-string)))))))
+  (should (equal (gpc-fetch 'system gpc-var) system-value)))
 
 (ert-deftest gpc-get-test ()
   (unintern "gpc-var")
-  (gpc-init gpc-var '((uname "Hurd" (lambda ()
-                                      (with-temp-buffer
-                                        (call-process "uname" nil t)
-                                        (s-chop-suffix "\n" (buffer-string)))))))
+  (setq system-value (with-temp-buffer
+                       (call-process "uname" nil t)
+                       (s-chop-suffix "\n" (buffer-string))))
+  (gpc-init gpc-var '((system "Hurd" (lambda ()
+                                       (with-temp-buffer
+                                         (call-process "uname" nil t)
+                                         (s-chop-suffix "\n" (buffer-string)))))))
   (gpc-overwrite-with-initvals gpc-var)
-  (should (equal (gpc-get 'uname gpc-var) "Hurd"))
+  (should (equal (gpc-get 'system gpc-var) "Hurd"))
   (gpc-clear gpc-var)
-  (should (equal (gpc-get 'uname gpc-var) "Darwin")))
+  (should (equal (gpc-get 'system gpc-var) system-value)))
 
 (ert-deftest gpc-fetch-all-test/no-entry ()
   (unintern "gpc-var")
@@ -179,15 +178,24 @@
 
 (ert-deftest gpc-fetch-all-test/one-entry ()
   (unintern "gpc-var")
+  (setq system-value (with-temp-buffer
+                       (call-process "uname" nil t)
+                       (s-chop-suffix "\n" (buffer-string))))
   (gpc-init gpc-var '((system "Hurd" (lambda ()
                                        (with-temp-buffer
                                          (call-process "uname" nil t)
                                          (s-chop-suffix "\n" (buffer-string)))))))
   (gpc-fetch-all gpc-var)
-  (should (equal (gpc-fetch 'system gpc-var) "Darwin")))
+  (should (equal (gpc-fetch 'system gpc-var) system-value)))
 
 (ert-deftest gpc-fetch-all-test/two-entries ()
   (unintern "gpc-var")
+  (setq system-value (with-temp-buffer
+                       (call-process "uname" nil t)
+                       (s-chop-suffix "\n" (buffer-string))))
+  (setq machine-value (with-temp-buffer
+                        (call-process "uname" nil t nil "-m")
+                        (s-chop-suffix "\n" (buffer-string))))
   (gpc-init gpc-var '((system "Hurd" (lambda ()
                                        (with-temp-buffer
                                          (call-process "uname" nil t)
@@ -197,8 +205,8 @@
                                           (call-process "uname" nil t nil "-m")
                                           (s-chop-suffix "\n" (buffer-string)))))))
   (gpc-fetch-all gpc-var)
-  (should (equal (gpc-fetch 'system gpc-var) "Darwin"))
-  (should (equal (gpc-fetch 'machine gpc-var) "x86_64")))
+  (should (equal (gpc-fetch 'system gpc-var) system-value))
+  (should (equal (gpc-fetch 'machine gpc-var) machine-value)))
 
 ;; FIXME: This test of the feature should be more testing friendly.
 (ert-deftest namespace-pollution-test ()

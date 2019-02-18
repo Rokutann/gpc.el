@@ -1,11 +1,11 @@
 ;;; gpc-test.el --- Tests for gpc
 
-(require 'ert)
-(require 'f)
-(require 's)
-(require 'nalist)
+;; (require 'ert)
+;; (require 'f)
+;; (require 's)
+;; (require 'nalist)
 
-(load (f-expand "gpc.el" default-directory))
+;; (load (f-expand "gpc.el" default-directory))
 
 ;;; Tests.
 

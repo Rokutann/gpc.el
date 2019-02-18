@@ -6,7 +6,7 @@
 ;; URL: https://github.com/mukuge/gpc.el
 ;; Keywords: lisp
 ;; Package-Version: 0.0.1
-;; Package-Requires: ((emacs "26.1"))
+;; Package-Requires: ((emacs "25.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

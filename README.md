@@ -44,25 +44,9 @@ fetch function.
 ```lisp
 ```
 
-#### gpc-defgpc `(symbol buffer-local doc-string &rest spec-list)`
+#### defcache `(symbol buffer-local doc-string &rest spec-list)`
 
-Define SYMBOL as a general purpose cache or gpc, and return SYMBOL.
-
-This macro uses ‘defvar’ internally. So, the resulting variable
-is special and can have a DOC-STRING.  It makes the variable
-automatically buffer-local if BUFFER-LOCAL is :buffer-local,
-otherwise global.
-
-The cache is initialized as an automatically buffer-local
-variable if the value of BUFFER-LOCAL is
-’buffer-local. Otherwise, as a global variable defined by
-‘defvar’.
-
-SPEC-LIST defines the specification of the cache: the initial
-value and fetch function for each key.  See ‘gpc-init’ for the
-detail.
-
-(fn SYMBOL BUFFER-LOCAL DOC-STRING &rest SPEC-LIST)
+{{defcache}}
 
 ```lisp
 ```

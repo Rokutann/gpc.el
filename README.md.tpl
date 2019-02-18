@@ -22,9 +22,9 @@ your Emacs config:
 ```lisp
 ```
 
-#### gpc-defgpc `(symbol buffer-local doc-string &rest spec-list)`
+#### defcache `(symbol buffer-local doc-string &rest spec-list)`
 
-{{gpc-defgpc}}
+{{defcache}}
 
 ```lisp
 ```

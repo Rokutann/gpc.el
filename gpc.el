@@ -93,7 +93,7 @@ fetch function."
                 (nalist-set k (car v) ,cache))
             (gpc-get-spec ,cache)))
 
-(cl-defmacro gpc-defgpc (symbol buffer-local doc-string &rest spec-list)
+(cl-defmacro defcache (symbol buffer-local doc-string &rest spec-list)
   "Define SYMBOL as a general purpose cache or gpc, and return SYMBOL.
 
 This macro uses `defvar' internally. So, the resulting variable

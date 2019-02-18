@@ -237,61 +237,61 @@
     (should (nalist-set-equal-p res '((a b (lambda () nil))
                                       (c d (lambda () t)))))))
 
-(ert-deftest gpc-defgpc-test/global/is-a-special-variable ()
+(ert-deftest defcache-test/global/is-a-special-variable ()
   (unintern "gpc-var-g")
-  (gpc-defgpc gpc-var-g :global nil)
+  (defcache gpc-var-g :global nil)
   (should (special-variable-p 'gpc-var-g)))
 
-(ert-deftest gpc-defgpc-test/global/is-not-buffer-local ()
+(ert-deftest defcache-test/global/is-not-buffer-local ()
   (unintern "gpc-var-g")
-  (gpc-defgpc gpc-var-g :global nil)
+  (defcache gpc-var-g :global nil)
   (should-not (local-variable-p 'gpc-var-g)))
 
-(ert-deftest gpc-defgpc-test/global/is-not-automatically-buffer-local ()
+(ert-deftest defcache-test/global/is-not-automatically-buffer-local ()
   (unintern "gpc-var-g")
-  (gpc-defgpc gpc-var-g :global nil)
+  (defcache gpc-var-g :global nil)
   (should-not (local-variable-if-set-p 'gpc-var-g)))
 
-(ert-deftest gpc-defgpc-test/buffer-local/is-a-special-variable ()
+(ert-deftest defcache-test/buffer-local/is-a-special-variable ()
   (unintern "gpc-var-abl")
-  (gpc-defgpc gpc-var-abl :buffer-local nil)
+  (defcache gpc-var-abl :buffer-local nil)
   (should (special-variable-p 'gpc-var-abl)))
 
-(ert-deftest gpc-defgpc-test/buffer-local/is-buffer-local ()
+(ert-deftest defcache-test/buffer-local/is-buffer-local ()
   (unintern "gpc-var-abl")
-  (gpc-defgpc gpc-var-abl :buffer-local nil)
+  (defcache gpc-var-abl :buffer-local nil)
   (should (local-variable-p 'gpc-var-abl)))
 
-(ert-deftest gpc-defgpc-test/buffer-local/is-automatically-buffer-local ()
+(ert-deftest defcache-test/buffer-local/is-automatically-buffer-local ()
   (unintern "gpc-var-abl")
-  (gpc-defgpc gpc-var-abl :buffer-local nil)
+  (defcache gpc-var-abl :buffer-local nil)
   (should (local-variable-if-set-p 'gpc-var-abl)))
 
-(ert-deftest gpc-defgpc-test/spec-with-no-entry ()
+(ert-deftest defcache-test/spec-with-no-entry ()
   (unintern "gpc-var-g")
-  (gpc-defgpc gpc-var-g :global nil)
+  (defcache gpc-var-g :global nil)
   (should (= (hash-table-count (gpc-get-spec gpc-var-g)) 0)))
 
-(ert-deftest gpc-defgpc-test/spec-with-one-entry ()
+(ert-deftest defcache-test/spec-with-one-entry ()
   (unintern "gpc-var-g")
-  (gpc-defgpc gpc-var-g :global
+  (defcache gpc-var-g :global
     nil
     (a b (lambda () nil)))
   (should (equal (gpc-util-hash-to-alist (gpc-get-spec gpc-var-g))
                  '((a b (lambda () nil))))))
 
-(ert-deftest gpc-defgpc-test/spec-with-two-entries ()
+(ert-deftest defcache-test/spec-with-two-entries ()
   (unintern "gpc-var-g")
-  (gpc-defgpc gpc-var-g :global
+  (defcache gpc-var-g :global
     nil
     (a b (lambda () nil))
     (c d (lambda () t)))
   (should (nalist-set-equal-p (gpc-util-hash-to-alist (gpc-get-spec gpc-var-g))
                               '((a b (lambda () nil)) (c d (lambda () t))))))
 
-(ert-deftest gpc-defgpc-test/doc-string ()
+(ert-deftest defcache-test/doc-string ()
   (unintern "gpc-var-g")
-  (gpc-defgpc gpc-var-g :global "Documentation for gpc-var-g.")
+  (defcache gpc-var-g :global "Documentation for gpc-var-g.")
   (should (equal (documentation-property 'gpc-var-g 'variable-documentation)
                  "Documentation for gpc-var-g.")))
 

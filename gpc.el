@@ -114,8 +114,8 @@ detail."
        (defvar ,symbol nil ,doc-string)
      (gpc-set-spec ,symbol (gpc-util-alist-to-hash ',spec-list))
      (nalist-init ,symbol nil)
-     (when (eq ,buffer-local 'buffer-local)
-       (nalist-make-variable-buffer-local ,symbol))))
+     (when (eq ,buffer-local :buffer-local)
+       (gpc-make-variable-buffer-local ,symbol))))
 
 (when gpc-namespace-pollution
   (defalias 'defgpc 'gpc-defgpc))

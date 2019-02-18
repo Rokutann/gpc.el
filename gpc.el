@@ -151,6 +151,14 @@ A cache spec is a hash table."
   "Get the fetch function of the pair with KEY in the CACHE's spec."
   `(nth 1 (gpc-spec-get-entry ,key ,cache)))
 
+(defmacro gpc-spec-map (function cache)
+  "Call function for all keys and values of the CACHE's spec.
+
+The function should have three arguments, which are filled by this macro with a key, its initval, and its fetchfn in this order."
+  `(maphash '(lambda (k v)
+               (funcall ,function k (nth 0 v) (nth 1 v)))
+            (gpc-get-spec ,cache)))
+
 (defmacro gpc-spec-keyp (key cache)
   "Return t if KEY is a key in the CACHE's spec, otherwise nil."
   `(if (gpc-spec-get-entry ,key ,cache) t nil))
@@ -168,10 +176,16 @@ A cache spec is a hash table."
 (defalias 'gpc-val 'nalist-get)
 
 (defmacro gpc-fetch (key cache)
-"Fetch the value of KEY in CACHE with its fetch function.
+  "Fetch the value of KEY in CACHE with its fetch function.
 
 It returns the value associated with KEY."
-`(nalist-set ,key (funcall (gpc-spec-get-fetchfn ,key ,cache)) ,cache))
+  `(nalist-set ,key (funcall (gpc-spec-get-fetchfn ,key ,cache)) ,cache))
+
+(defmacro gpc-fetch-all (cache)
+  "Fetch values of all keys in the CACHE's spec."
+  `(gpc-spec-map '(lambda (k v f)
+                    (gpc-fetch k ,cache))
+                 ,cache))
 
 (cl-defmacro gpc-get (key cache &key (force nil))
   "Return the value of KEY in CACHE by calling the fetchfn if needed."

@@ -181,30 +181,86 @@
   (should (eq (gpc-val 'a gpc-var) 'b))
   (should (eq (gpc-val 'c gpc-var) 'd)))
 
+(ert-deftest gpc-fetch-test ()
+  (unintern "gpc-var")
+  (gpc-init gpc-var '((uname "Hurd" (lambda ()
+                                      (with-temp-buffer
+                                        (call-process "uname" nil t)
+                                        (s-chop-suffix "\n" (buffer-string)))))))
+  (should (equal (gpc-fetch 'uname gpc-var) "Darwin")))
 
-;;; Refactored upto here.
+(ert-deftest gpc-get-test ()
+  (unintern "gpc-var")
+  (gpc-init gpc-var '((uname "Hurd" (lambda ()
+                                      (with-temp-buffer
+                                        (call-process "uname" nil t)
+                                        (s-chop-suffix "\n" (buffer-string)))))))
+  (gpc-overwrite-with-initvals gpc-var)
+  (should (equal (gpc-get 'uname gpc-var) "Hurd"))
+  (gpc-clear gpc-var)
+  (should (equal (gpc-get 'uname gpc-var) "Darwin")))
 
-(ert-deftest test-namespace-pollution ()
+(ert-deftest gpc-fetch-all-test/no-entry ()
+  (unintern "gpc-var")
+  (gpc-init gpc-var nil)
+  (gpc-fetch-all gpc-var)
+  (should (eq gpc-var nil)))
+
+(ert-deftest gpc-fetch-all-test/one-entry ()
+  (unintern "gpc-var")
+  (gpc-init gpc-var '((system "Hurd" (lambda ()
+                                       (with-temp-buffer
+                                         (call-process "uname" nil t)
+                                         (s-chop-suffix "\n" (buffer-string)))))))
+  (gpc-fetch-all gpc-var)
+  (should (equal (gpc-fetch 'system gpc-var) "Darwin")))
+
+(ert-deftest gpc-fetch-all-test/two-entries ()
+  (unintern "gpc-var")
+  (gpc-init gpc-var '((system "Hurd" (lambda ()
+                                       (with-temp-buffer
+                                         (call-process "uname" nil t)
+                                         (s-chop-suffix "\n" (buffer-string)))))
+                      (machine "mips" (lambda ()
+                                        (with-temp-buffer
+                                          (call-process "uname" nil t nil "-m")
+                                          (s-chop-suffix "\n" (buffer-string)))))))
+  (gpc-fetch-all gpc-var)
+  (should (equal (gpc-fetch 'system gpc-var) "Darwin"))
+  (should (equal (gpc-fetch 'machine gpc-var) "x86_64")))
+
+;; FIXME: This test of the feature should be more testing friendly.
+(ert-deftest namespace-pollution-test ()
   (should (if gpc-namespace-pollution
               (eq (fboundp 'defgpc) t)
             (eq (fboundp 'defgpc) nil))))
 
-(ert-deftest test-gpc-spec-get ()
-  (setup-gpc-defcache)
-  (should (equal (gpc-spec-get-entry 'true g-cache)
-                 '(nil a-retriever))))
+(ert-deftest gpc-map-test/spec-is-nil ()
+  (unintern "gpc-var")
+  (gpc-init gpc-var nil)
+  (let ((res nil))
+    (gpc-spec-map '(lambda (k v f) (push (list k v f) res)) gpc-var)
+    (should (eq res nil))))
 
-(ert-deftest test-gpc-spec-set-engry ()
-  (setup-gpc-defcache)
-  (should (equal (gpc-spec-get-entry 'true g-cache)
-                 '(nil a-retriever)))
-  (gpc-spec-set-entry 'true t 'a-fetchfn g-cache)
-  (should (equal (gpc-spec-get-entry 'true g-cache)
-                 '(t a-fetchfn)))
-  (gpc-spec-set-entry 'test "testing" 'a-fetchfn g-cache)
-  (should (equal (gpc-spec-get-entry 'test g-cache)
-                 '("testing" a-fetchfn)))
-  )
+(ert-deftest gpc-map-test/spec-has-one-entry ()
+  (unintern "gpc-var")
+  (gpc-init gpc-var '((a b (lambda () nil))))
+  (let ((res nil))
+    (gpc-spec-map '(lambda (k v f) (push (list k v f) res)) gpc-var)
+    (should (equal res '((a b (lambda () nil)))))))
+
+(ert-deftest gpc-map-test/spec-has-one-entry ()
+  (unintern "gpc-var")
+  (gpc-init gpc-var '((a b (lambda () nil))
+                      (c d (lambda () t))))
+  (let ((res nil))
+    (gpc-spec-map '(lambda (k v f) (push (list k v f) res)) gpc-var)
+    (should (nalist-set-equal-p res '((a b (lambda () nil))
+                                      (c d (lambda () t)))))))
+
+
+;;; Refactored downto here.
+
 
 (ert-deftest test-gpc-defcache-buffer-local ()
   (setup-gpc-defcache)
@@ -217,31 +273,6 @@
                  "a global cache."))
   (should (equal (documentation-property 'l-cache 'variable-documentation)
                  "a buffer-local cache.")))
-
-(ert-deftest test-gpc-val ()
-  (setup-gpc-defcache)
-  (gpc-overwrite-with-initvals g-cache)
-  (should (equal (gpc-val 'pwd g-cache) "/")))
-
-(ert-deftest test-gpc-spec-keyp ()
-  (setup-gpc-defcache)
-  (gpc-overwrite-with-initvals g-cache)
-  (should (eq (gpc-spec-keyp 'spam g-cache) nil))
-  (should (eq (gpc-spec-keyp 'pwd g-cache) t)))
-
-
-(ert-deftest test-gpc-fetch ()
-  (setup-gpc-defcache)
-  (equal (gpc-fetch 'uname g-cache)
-         "Darwin"))
-
-(ert-deftest test-gpc-get ()
-  (setup-gpc-defcache)
-  (gpc-overwrite-with-initvals g-cache)
-  (should (equal (gpc-get 'uname g-cache) "generic"))
-  (gpc-clear g-cache)
-  (should (equal (gpc-get 'uname g-cache)
-                 "Darwin")))
 
 (ert-deftest test-gpc-defcache ()
   (gpc-defgpc acache 'global
@@ -261,78 +292,6 @@
   ;; (should (equal (gethash 'pwd acache)
   ;;                "/"))
   ;;(should (equal (gpc-get 'pwd acache) "/"))
-  )
-
-(ert-deftest test-gpc-clear ()
-  (setup-gpc-defcache)
-  (gpc-clear g-cache)
-  (should (eq g-cache nil)))
-
-(ert-deftest test-gpc-spec-get-fetchfn ()
-  (setup-gpc-defcache)
-  (should (eq (gpc-spec-get-fetchfn
-               'true
-               g-cache)
-              'a-retriever)))
-
-(ert-deftest test-gpc-get-spec ()
-  (setup-gpc-defcache)
-  (should (equal (gethash 'true (gpc-get-spec g-cache))
-                 '(nil a-retriever))))
-
-(ert-deftest test-gpc-copy-init-values ()
-  (setup-gpc-defcache)
-  (gpc-overwrite-with-initvals g-cache)
-  (should (equal (gpc-val 'pwd g-cache)
-                 "/")))
-
-(ert-deftest test-gpc-remove ()
-  (setup-gpc-defcache)
-  (gpc-remove 'pwd g-cache)
-  (should (eq (gpc-pair-exist-p 'pwd g-cache)
-              nil)))
-
-;;; Tests for test helper functions.
-
-(ert-deftest test-is-subset-hash-of ()
-  (setq hash-a (make-hash-table))
-  (setq hash-b (make-hash-table))
-  (setq hash-c (make-hash-table))
-  (puthash 'a 1 hash-a)
-  (puthash 'a 1 hash-b)
-  (puthash 'b 2 hash-b)
-  (puthash 'c 3 hash-c)
-  (should (eq (is-subset-hash-of (make-hash-table) (make-hash-table))
-              t))
-  (should (eq (is-subset-hash-of hash-a hash-b)
-              t))
-  (should (eq (is-subset-hash-of hash-b hash-a)
-              nil))
-  (should (eq (is-subset-hash-of hash-a hash-c)
-              nil))
-  )
-
-(ert-deftest test-hash-equal ()
-  (setq hash-a (make-hash-table))
-  (setq hash-b (make-hash-table))
-  (setq hash-c (make-hash-table))
-  (setq hash-d (make-hash-table))
-  (puthash 'a 1 hash-a)
-  (puthash 'a 1 hash-b)
-  (puthash 'b 2 hash-b)
-  (puthash 'c 3 hash-c)
-  (puthash 'a 1 hash-d)
-  (puthash 'b 2 hash-d)
-  (should (eq (hash-equal (make-hash-table) (make-hash-table))
-              t))
-  (should (eq (hash-equal hash-a hash-b)
-              nil))
-  (should (eq (hash-equal hash-b hash-a)
-              nil))
-  (should (eq (hash-equal hash-a hash-c)
-              nil))
-  (should (eq (hash-equal hash-b hash-d)
-              t))
   )
 
 

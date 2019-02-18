@@ -37,6 +37,52 @@
 
 ;;; Tests.
 
+(ert-deftest gpc-set-spec-test/hash-table-generator ()
+  (unintern "gpc-var")
+  (gpc-set-spec gpc-var (make-hash-table))
+  (should (hash-table-p (get 'gpc-var 'gpc-cache-spec))))
+
+(ert-deftest gpc-set-spec-test/hash-table-variable ()
+  (unintern "gpc-var")
+  (setq ht (make-hash-table))
+  (gpc-set-spec gpc-var ht)
+  (should (hash-table-p (get 'gpc-var 'gpc-cache-spec))))
+
+(ert-deftest gpc-get-spec-test ()
+  (unintern "gpc-var")
+  (setq gpc-var nil)
+  (put 'gpc-var 'gpc-cache-spec (make-hash-table))
+  (should (hash-table-p (gpc-get-spec gpc-var))))
+
+(ert-deftest gpc-spec-set-entry-test ()
+  (unintern "gpc-var")
+  (setq gpc-var nil)
+  (gpc-set-spec gpc-var (make-hash-table))
+  (gpc-spec-set-entry 'a 'b '(lambda () 'c) gpc-var)
+  (setq spec (gpc-get-spec gpc-var))
+  (should (equal (gethash 'a spec) '(b (lambda () 'c)))))
+
+(ert-deftest gpc-spec-get-entry-test ()
+  (unintern "gpc-var")
+  (setq gpc-var nil)
+  (gpc-set-spec gpc-var (make-hash-table))
+  (gpc-spec-set-entry 'a 'b '(lambda () 'c) gpc-var)
+  (should (equal (gpc-spec-get-entry 'a gpc-var) '(b (lambda () 'c)))))
+
+(ert-deftest gpc-spec-get-initval-test ()
+  (unintern "gpc-var")
+  (setq gpc-var nil)
+  (gpc-set-spec gpc-var (make-hash-table))
+  (gpc-spec-set-entry 'a 'b '(lambda () 'c) gpc-var)
+  (should (eq (gpc-spec-get-initval 'a gpc-var) 'b)))
+
+(ert-deftest gpc-spec-get-fetchfn-test ()
+  (unintern "gpc-var")
+  (setq gpc-var nil)
+  (gpc-set-spec gpc-var (make-hash-table))
+  (gpc-spec-set-entry 'a 'b '(lambda () 'c) gpc-var)
+  (should (equal (gpc-spec-get-fetchfn 'a gpc-var) '(lambda () 'c))))
+
 (ert-deftest test-namespace-pollution ()
   (should (if gpc-namespace-pollution
               (eq (fboundp 'defgpc) t)

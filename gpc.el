@@ -52,7 +52,7 @@ option introduces.")
     (nalist-map #'(lambda (k v) (puthash k v ht)) alist)
     ht))
 
-;; Initilize functions.
+;; Initilization functions.
 
 (defmacro gpc-init (symbol spec-list)
   "Initialize SYMBOL as a general purpose cache with SPEC-LIST.
@@ -120,28 +120,20 @@ detail."
 (when gpc-namespace-pollution
   (defalias 'defgpc 'gpc-defgpc))
 
-;; Cache pec access functions
+;; Cache spec access functions
 
-(defmacro gpc-set-spec (cache hash-table)
-  "Set HASH-TABLE  as the CACHE's spec.
+(defmacro gpc-set-spec (symbol hash-table)
+  "Set HASH-TABLE in SYMBOL's plist as a cache spec.
 
 HASH-TABLE should contain a cache spec following the spec
 description format.  See `gpc-init' for the detail."
-  `(put ',cache 'gpc-cache-spec ,hash-table))
+  `(put ',symbol 'gpc-cache-spec ,hash-table))
 
 (defmacro gpc-get-spec (cache)
   "Return the spec of CACHE.
 
 A cache spec is a hash table."
   `(get ',cache 'gpc-cache-spec))
-
-(defmacro gpc-pp-spec (cache)
-  "Pretty print the spec of CACHE, and return it."
-  (let ((alist (gensym)))
-    `(let ((,alist (gpc-util-hash-to-alist
-                    (gpc-get-spec ,cache))))
-       (message (pp ,alist))
-       ,alist)))
 
 (defmacro gpc-spec-set-entry (key initval fetchfn cache)
   "Set the CACHE's spec entry whose key is KEY to have the value (INITVAL FETCHFN)."
@@ -162,6 +154,14 @@ A cache spec is a hash table."
 (defmacro gpc-spec-keyp (key cache)
   "Return t if KEY is a key in the CACHE's spec, otherwise nil."
   `(if (gpc-spec-get-entry ,key ,cache) t nil))
+
+(defmacro gpc-pp-spec (cache)
+  "Pretty print the spec of CACHE, and return it."
+  (let ((alist (gensym)))
+    `(let ((,alist (gpc-util-hash-to-alist
+                    (gpc-get-spec ,cache))))
+       (message (pp ,alist))
+       ,alist)))
 
 ;; Cache content access functions
 

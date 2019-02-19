@@ -57,14 +57,14 @@ your Emacs config:
 
 ```lisp
 (gpc-init acache
-  '((buffer-size 0 (lambda ()
+  '((buffer-size 0 (lambda (self)
                      (buffer-size)))
-    (uptime nil (lambda ()
+    (uptime nil (lambda (self)
                   (with-temp-buffer
                     (call-process "uptime" nil t)
                     (s-chop-suffix "\n" (buffer-string)))))
     (joke "How do you make holy water? You boil the hell out of it."
-          (lambda ()
+          (lambda (self)
             (with-temp-buffer
               (call-process "curl" nil t nil "-sb" "-H" "Accept: text/plain" "https://icanhazdadjoke.com/")
               (s-chop-suffix "\n" (buffer-string)))))))

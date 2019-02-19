@@ -33,11 +33,11 @@
   (setq machine-value (with-temp-buffer
                         (call-process "uname" nil t nil "-m")
                         (s-chop-suffix "\n" (buffer-string))))
-  (gpc-init gpcit-2 '((system "Hurd" (lambda ()
+  (gpc-init gpcit-2 '((system "Hurd" (lambda (self)
                                        (with-temp-buffer
                                          (call-process "uname" nil t)
                                          (s-chop-suffix "\n" (buffer-string)))))
-                      (machine "mips" (lambda ()
+                      (machine "mips" (lambda (self)
                                         (with-temp-buffer
                                           (call-process "uname" nil t nil "-m")
                                           (s-chop-suffix "\n" (buffer-string)))))))
@@ -79,11 +79,11 @@
   (setq machine-value (with-temp-buffer
                         (call-process "uname" nil t nil "-m")
                         (s-chop-suffix "\n" (buffer-string))))
-  (gpc-init gpcit-1 '((system "Hurd" (lambda ()
+  (gpc-init gpcit-1 '((system "Hurd" (lambda (self)
                                        (with-temp-buffer
                                          (call-process "uname" nil t)
                                          (s-chop-suffix "\n" (buffer-string)))))
-                      (machine "mips" (lambda ()
+                      (machine "mips" (lambda (self)
                                         (with-temp-buffer
                                           (call-process "uname" nil t nil "-m")
                                           (s-chop-suffix "\n" (buffer-string)))))))
@@ -119,11 +119,11 @@
   (setq machine-value (with-temp-buffer
                         (call-process "uname" nil t nil "-m")
                         (s-chop-suffix "\n" (buffer-string))))
-  (gpc-init gpcit-3 '((system "Hurd" (lambda ()
+  (gpc-init gpcit-3 '((system "Hurd" (lambda (self)
                                        (with-temp-buffer
                                          (call-process "uname" nil t)
                                          (s-chop-suffix "\n" (buffer-string)))))
-                      (machine "mips" (lambda ()
+                      (machine "mips" (lambda (self)
                                         (with-temp-buffer
                                           (call-process "uname" nil t nil "-m")
                                           (s-chop-suffix "\n" (buffer-string)))))))

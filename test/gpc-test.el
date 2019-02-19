@@ -23,30 +23,30 @@
   (unintern "gpc-var" nil)
   (setq gpc-var nil)
   (gpc-set-spec gpc-var (make-hash-table))
-  (gpc-spec-set-entry 'a 'b '(lambda () 'c) gpc-var)
+  (gpc-spec-set-entry 'a 'b '(lambda (self) 'c) gpc-var)
   (setq spec (gpc-get-spec gpc-var))
-  (should (equal (gethash 'a spec) '(b (lambda () 'c)))))
+  (should (equal (gethash 'a spec) '(b (lambda (self) 'c)))))
 
 (ert-deftest gpc-spec-get-entry-test ()
   (unintern "gpc-var" nil)
   (setq gpc-var nil)
   (gpc-set-spec gpc-var (make-hash-table))
-  (gpc-spec-set-entry 'a 'b '(lambda () 'c) gpc-var)
-  (should (equal (gpc-spec-get-entry 'a gpc-var) '(b (lambda () 'c)))))
+  (gpc-spec-set-entry 'a 'b '(lambda (self) 'c) gpc-var)
+  (should (equal (gpc-spec-get-entry 'a gpc-var) '(b (lambda (self) 'c)))))
 
 (ert-deftest gpc-spec-get-initval-test ()
   (unintern "gpc-var" nil)
   (setq gpc-var nil)
   (gpc-set-spec gpc-var (make-hash-table))
-  (gpc-spec-set-entry 'a 'b '(lambda () 'c) gpc-var)
+  (gpc-spec-set-entry 'a 'b '(lambda (self) 'c) gpc-var)
   (should (eq (gpc-spec-get-initval 'a gpc-var) 'b)))
 
 (ert-deftest gpc-spec-get-fetchfn-test ()
   (unintern "gpc-var" nil)
   (setq gpc-var nil)
   (gpc-set-spec gpc-var (make-hash-table))
-  (gpc-spec-set-entry 'a 'b '(lambda () 'c) gpc-var)
-  (should (equal (gpc-spec-get-fetchfn 'a gpc-var) '(lambda () 'c))))
+  (gpc-spec-set-entry 'a 'b '(lambda (self) 'c) gpc-var)
+  (should (equal (gpc-spec-get-fetchfn 'a gpc-var) '(lambda (self) 'c))))
 
 (ert-deftest gpc-spec-keyp-test/nil ()
   (unintern "gpc-var" nil)
@@ -58,14 +58,14 @@
   (unintern "gpc-var" nil)
   (setq gpc-var nil)
   (gpc-set-spec gpc-var (make-hash-table))
-  (gpc-spec-set-entry 'a 'b '(lambda () 'c) gpc-var)
+  (gpc-spec-set-entry 'a 'b '(lambda (self) 'c) gpc-var)
   (should (gpc-spec-keyp 'a gpc-var)))
 
 (ert-deftest gpc-spec-keyp-test/non-existent-key ()
   (unintern "gpc-var" nil)
   (setq gpc-var nil)
   (gpc-set-spec gpc-var (make-hash-table))
-  (gpc-spec-set-entry 'a 'b '(lambda () 'c) gpc-var)
+  (gpc-spec-set-entry 'a 'b '(lambda (self) 'c) gpc-var)
   (should-not (gpc-spec-keyp 'b gpc-var)))
 
 (ert-deftest gpc-util-hash-to-alist/hash-table-with-no-entry ()
@@ -108,20 +108,20 @@
 
 (ert-deftest gpc-init-test/spec-with-one-entry ()
   (unintern "gpc-var" nil)
-  (gpc-init gpc-var '((a b (lambda () nil))))
+  (gpc-init gpc-var '((a b (lambda (self) nil))))
   (should (eq gpc-var nil))
   (should (eq (gpc-spec-get-initval 'a gpc-var) 'b))
-  (should (equal (gpc-spec-get-fetchfn 'a gpc-var) '(lambda () nil))))
+  (should (equal (gpc-spec-get-fetchfn 'a gpc-var) '(lambda (self) nil))))
 
 (ert-deftest gpc-init-test/spec-with-two-entries ()
   (unintern "gpc-var" nil)
-  (gpc-init gpc-var '((a b (lambda () nil))
-                      (c d (lambda () t))))
+  (gpc-init gpc-var '((a b (lambda (self) nil))
+                      (c d (lambda (self) t))))
   (should (eq gpc-var nil))
   (should (eq (gpc-spec-get-initval 'a gpc-var) 'b))
   (should (eq (gpc-spec-get-initval 'c gpc-var) 'd))
-  (should (equal (gpc-spec-get-fetchfn 'a gpc-var) '(lambda () nil)))
-  (should (equal (gpc-spec-get-fetchfn 'c gpc-var) '(lambda () t))))
+  (should (equal (gpc-spec-get-fetchfn 'a gpc-var) '(lambda (self) nil)))
+  (should (equal (gpc-spec-get-fetchfn 'c gpc-var) '(lambda (self) t))))
 
 (ert-deftest gpc-overwrite-with-initvals-test/spec-with-no-entry ()
   (unintern "gpc-var" nil)
@@ -131,15 +131,15 @@
 
 (ert-deftest gpc-overwrite-with-initvals-test/spec-with-one-entry ()
   (unintern "gpc-var" nil)
-  (gpc-init gpc-var '((a b (lambda () nil))))
+  (gpc-init gpc-var '((a b (lambda (self) nil))))
   (gpc-overwrite-with-initvals gpc-var)
   (should (= (length gpc-var) 1))
   (should (eq (gpc-val 'a gpc-var) 'b)))
 
 (ert-deftest gpc-overwrite-with-initvals-test/spec-with-two-entries ()
   (unintern "gpc-var" nil)
-  (gpc-init gpc-var '((a b (lambda () nil))
-                      (c d (lambda () t))))
+  (gpc-init gpc-var '((a b (lambda (self) nil))
+                      (c d (lambda (self) t))))
   (gpc-overwrite-with-initvals gpc-var)
   (should (= (length gpc-var) 2))
   (should (eq (gpc-val 'a gpc-var) 'b))
@@ -150,7 +150,7 @@
   (setq system-value (with-temp-buffer
                        (call-process "uname" nil t)
                        (s-chop-suffix "\n" (buffer-string))))
-  (gpc-init gpc-var '((system "Hurd" (lambda ()
+  (gpc-init gpc-var '((system "Hurd" (lambda (self)
                                        (with-temp-buffer
                                          (call-process "uname" nil t)
                                          (s-chop-suffix "\n" (buffer-string)))))))
@@ -161,7 +161,7 @@
   (setq system-value (with-temp-buffer
                        (call-process "uname" nil t)
                        (s-chop-suffix "\n" (buffer-string))))
-  (gpc-init gpc-var '((system "Hurd" (lambda ()
+  (gpc-init gpc-var '((system "Hurd" (lambda (self)
                                        (with-temp-buffer
                                          (call-process "uname" nil t)
                                          (s-chop-suffix "\n" (buffer-string)))))))
@@ -181,7 +181,7 @@
   (setq system-value (with-temp-buffer
                        (call-process "uname" nil t)
                        (s-chop-suffix "\n" (buffer-string))))
-  (gpc-init gpc-var '((system "Hurd" (lambda ()
+  (gpc-init gpc-var '((system "Hurd" (lambda (self)
                                        (with-temp-buffer
                                          (call-process "uname" nil t)
                                          (s-chop-suffix "\n" (buffer-string)))))))
@@ -196,11 +196,11 @@
   (setq machine-value (with-temp-buffer
                         (call-process "uname" nil t nil "-m")
                         (s-chop-suffix "\n" (buffer-string))))
-  (gpc-init gpc-var '((system "Hurd" (lambda ()
+  (gpc-init gpc-var '((system "Hurd" (lambda (self)
                                        (with-temp-buffer
                                          (call-process "uname" nil t)
                                          (s-chop-suffix "\n" (buffer-string)))))
-                      (machine "mips" (lambda ()
+                      (machine "mips" (lambda (self)
                                         (with-temp-buffer
                                           (call-process "uname" nil t nil "-m")
                                           (s-chop-suffix "\n" (buffer-string)))))))
@@ -217,19 +217,19 @@
 
 (ert-deftest gpc-map-test/spec-has-one-entry ()
   (unintern "gpc-var" nil)
-  (gpc-init gpc-var '((a b (lambda () nil))))
+  (gpc-init gpc-var '((a b (lambda (self) nil))))
   (let ((res nil))
     (gpc-spec-map '(lambda (k v f) (push (list k v f) res)) gpc-var)
-    (should (equal res '((a b (lambda () nil)))))))
+    (should (equal res '((a b (lambda (self) nil)))))))
 
 (ert-deftest gpc-map-test/spec-has-one-entry ()
   (unintern "gpc-var" nil)
-  (gpc-init gpc-var '((a b (lambda () nil))
-                      (c d (lambda () t))))
+  (gpc-init gpc-var '((a b (lambda (self) nil))
+                      (c d (lambda (self) t))))
   (let ((res nil))
     (gpc-spec-map '(lambda (k v f) (push (list k v f) res)) gpc-var)
-    (should (nalist-set-equal-p res '((a b (lambda () nil))
-                                      (c d (lambda () t)))))))
+    (should (nalist-set-equal-p res '((a b (lambda (self) nil))
+                                      (c d (lambda (self) t)))))))
 
 (ert-deftest defcache-test/global/is-a-special-variable ()
   (unintern "gpc-var-g" nil)
@@ -270,18 +270,18 @@
   (unintern "gpc-var-g" nil)
   (defcache gpc-var-g :global
     nil
-    (a b (lambda () nil)))
+    (a b (lambda (self) nil)))
   (should (equal (gpc-util-hash-to-alist (gpc-get-spec gpc-var-g))
-                 '((a b (lambda () nil))))))
+                 '((a b (lambda (self) nil))))))
 
 (ert-deftest defcache-test/spec-with-two-entries ()
   (unintern "gpc-var-g" nil)
   (defcache gpc-var-g :global
     nil
-    (a b (lambda () nil))
-    (c d (lambda () t)))
+    (a b (lambda (self) nil))
+    (c d (lambda (self) t)))
   (should (nalist-set-equal-p (gpc-util-hash-to-alist (gpc-get-spec gpc-var-g))
-                              '((a b (lambda () nil)) (c d (lambda () t))))))
+                              '((a b (lambda (self) nil)) (c d (lambda (self) t))))))
 
 (ert-deftest defcache-test/doc-string ()
   (unintern "gpc-var-g" nil)

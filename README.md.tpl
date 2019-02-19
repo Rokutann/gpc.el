@@ -15,7 +15,7 @@ your Emacs config:
 
 ### Initialization Functions
 
-* [gpct-init](#gpct-init-symbol-spec-list) `(symbol spec-list)`
+* [gpc-init](#gpct-init-symbol-spec-list) `(symbol spec-list)`
 * [defcache](#defcache-symbol-buffer-local-doc-string-rest-spec-list) `(symbol buffer-local doc-string &rest spec-list)`
 * [gpc-overwrite-with-initvals](#gpc-overwrite-with-initvals-cache) `(cache)`
 * [gpc-make-local-variable](#gpc-make-local-variable)

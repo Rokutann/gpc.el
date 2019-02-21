@@ -147,24 +147,16 @@
 
 (ert-deftest gpc-fetch-test ()
   (unintern "gpc-var" nil)
-  (setq system-value (with-temp-buffer
-                       (call-process "uname" nil t)
-                       (s-chop-suffix "\n" (buffer-string))))
+  (setq system-value (s-chop-suffix "\n" (shell-command-to-string "uname")))
   (gpc-init gpc-var '((system "Hurd" (lambda (self)
-                                       (with-temp-buffer
-                                         (call-process "uname" nil t)
-                                         (s-chop-suffix "\n" (buffer-string)))))))
+                                       (s-chop-suffix "\n" (shell-command-to-string "uname"))))))
   (should (equal (gpc-fetch 'system gpc-var) system-value)))
 
 (ert-deftest gpc-get-test ()
   (unintern "gpc-var" nil)
-  (setq system-value (with-temp-buffer
-                       (call-process "uname" nil t)
-                       (s-chop-suffix "\n" (buffer-string))))
+  (setq system-value (s-chop-suffix "\n" (shell-command-to-string "uname")))
   (gpc-init gpc-var '((system "Hurd" (lambda (self)
-                                       (with-temp-buffer
-                                         (call-process "uname" nil t)
-                                         (s-chop-suffix "\n" (buffer-string)))))))
+                                       (s-chop-suffix "\n" (shell-command-to-string "uname"))))))
   (gpc-overwrite-with-initvals gpc-var)
   (should (equal (gpc-get 'system gpc-var) "Hurd"))
   (gpc-clear gpc-var)
@@ -178,32 +170,20 @@
 
 (ert-deftest gpc-fetch-all-test/one-entry ()
   (unintern "gpc-var" nil)
-  (setq system-value (with-temp-buffer
-                       (call-process "uname" nil t)
-                       (s-chop-suffix "\n" (buffer-string))))
+  (setq system-value (s-chop-suffix "\n" (shell-command-to-string "uname")))
   (gpc-init gpc-var '((system "Hurd" (lambda (self)
-                                       (with-temp-buffer
-                                         (call-process "uname" nil t)
-                                         (s-chop-suffix "\n" (buffer-string)))))))
+                                       (s-chop-suffix "\n" (shell-command-to-string "uname"))))))
   (gpc-fetch-all gpc-var)
   (should (equal (gpc-fetch 'system gpc-var) system-value)))
 
 (ert-deftest gpc-fetch-all-test/two-entries ()
   (unintern "gpc-var" nil)
-  (setq system-value (with-temp-buffer
-                       (call-process "uname" nil t)
-                       (s-chop-suffix "\n" (buffer-string))))
-  (setq machine-value (with-temp-buffer
-                        (call-process "uname" nil t nil "-m")
-                        (s-chop-suffix "\n" (buffer-string))))
+  (setq system-value (s-chop-suffix "\n" (shell-command-to-string "uname")))
+  (setq machine-value (s-chop-suffix "\n" (shell-command-to-string "uname -m")))
   (gpc-init gpc-var '((system "Hurd" (lambda (self)
-                                       (with-temp-buffer
-                                         (call-process "uname" nil t)
-                                         (s-chop-suffix "\n" (buffer-string)))))
+                                       (s-chop-suffix "\n" (shell-command-to-string "uname"))))
                       (machine "mips" (lambda (self)
-                                        (with-temp-buffer
-                                          (call-process "uname" nil t nil "-m")
-                                          (s-chop-suffix "\n" (buffer-string)))))))
+                                        (s-chop-suffix "\n" (shell-command-to-string "uname -m"))))))
   (gpc-fetch-all gpc-var)
   (should (equal (gpc-fetch 'system gpc-var) system-value))
   (should (equal (gpc-fetch 'machine gpc-var) machine-value)))

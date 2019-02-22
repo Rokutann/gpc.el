@@ -4,12 +4,14 @@ A general purpose cache facility for Emacs. It's light weight and buffer-local s
 
 ## Installation
 
-Place `gpc.el` on a directory in your `load-path', and add this to
+Place `nalist.el` and `gpc.el` on a directory in your `load-path', and add this to
 your Emacs config:
 
 ```el
 (require 'gpc)
 ```
+
+See [nalist.el](https://github.com/mukuge/nalist.el) for the detail of the `nalist` library.
 
 ## API
 

@@ -51,7 +51,7 @@ your Emacs config:
 
 ## Documentation and Examples
 
-### gpct-init `(symbol spec-list)`
+### gpc-init `(symbol spec-list)`
 
 Initialize SYMBOL as a general purpose cache with SPEC-LIST.
 

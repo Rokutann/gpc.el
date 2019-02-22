@@ -60,14 +60,14 @@ your Emacs config:
   '((buffer-size 0 (lambda (self)
                      (buffer-size)))
     (uptime nil (lambda (self)
-                  (with-temp-buffer
-                    (call-process "uptime" nil t)
-                    (s-chop-suffix "\n" (buffer-string)))))
+                  (s-chop-suffix "\n" (shell-command-to-string "uptime"))))
     (joke "How do you make holy water? You boil the hell out of it."
           (lambda (self)
             (with-temp-buffer
               (call-process "curl" nil t nil "-sb" "-H" "Accept: text/plain" "https://icanhazdadjoke.com/")
-              (s-chop-suffix "\n" (buffer-string)))))))
+              (s-chop-suffix "\n" (buffer-string)))))
+    (buffer-memory 0 (lambda (self)
+                       (* 8 (gpc-get 'buffer-size acache))))))
 ```
 
 ### defcache `(symbol buffer-local doc-string &rest spec-list)`

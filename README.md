@@ -79,17 +79,17 @@ fetch function.
 
 ```lisp
 (gpc-init acache
-  '((buffer-size 0 (lambda ()
+  '((buffer-size 0 (lambda (self)
                      (buffer-size)))
-    (uptime nil (lambda ()
-                  (with-temp-buffer
-                    (call-process "uptime" nil t)
-                    (s-chop-suffix "\n" (buffer-string)))))
+    (uptime nil (lambda (self)
+                  (s-chop-suffix "\n" (shell-command-to-string "uptime"))))
     (joke "How do you make holy water? You boil the hell out of it."
-          (lambda ()
+          (lambda (self)
             (with-temp-buffer
               (call-process "curl" nil t nil "-sb" "-H" "Accept: text/plain" "https://icanhazdadjoke.com/")
-              (s-chop-suffix "\n" (buffer-string)))))))
+              (s-chop-suffix "\n" (buffer-string)))))
+    (buffer-memory 0 (lambda (self)
+                       (* 8 (gpc-get 'buffer-size acache))))))
 ```
 
 ### defcache `(symbol buffer-local doc-string &rest spec-list)`
@@ -332,9 +332,11 @@ Get the fetch function of the pair with KEY in the CACHE’s spec.
 
 ### gpc-spec-map `(function cache)`
 
-Call function for all keys and values of the CACHE’s spec.
+Call FUNCTION for all keys and values of the CACHE’s spec.
 
-The function should have three arguments, which are filled by this macro with a key, its initval, and its fetchfn in this order.
+The function should have three arguments, which are filled by
+this macro with a key, its initval, and its fetchfn in this
+order.
 
 ```lisp
 ```

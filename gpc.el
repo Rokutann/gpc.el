@@ -170,7 +170,7 @@ order."
   "Fetch the value of KEY in CACHE with its fetch function.
 
 It returns the value associated with KEY."
-  `(nalist-set ,key (funcall (gpc-spec-get-fetchfn ,key ,cache) ,cache) ,cache))
+  `(nalist-set ,key (funcall (gpc-spec-get-fetchfn ,key ,cache)) ,cache))
 
 (defmacro gpc-fetch-all (cache)
   "Fetch values of all keys in the CACHE's spec."

@@ -289,7 +289,7 @@
     (gpc-make-local-variable gpc-var)
     (gpc-lock gpc-var)
     (should (= (length (gpc-get-lock-list gpc-var)) 1))
-    (should (seq-set-equal-p (gpc-get-lock-list gpc-var) (list buffer-a)))))
+    (should (gpc-helper-seq-set-equal-p (gpc-get-lock-list gpc-var) (list buffer-a)))))
 
 (ert-deftest gpc-lock-test/two-locks ()
   (unintern "gpc-var" nil)
@@ -302,7 +302,7 @@
     (set-buffer buffer-b)
     (gpc-lock gpc-var)
     (should (= (length (gpc-get-lock-list gpc-var)) 2))
-    (should (seq-set-equal-p (gpc-get-lock-list gpc-var) (list buffer-a buffer-b)))))
+    (should (gpc-helper-seq-set-equal-p (gpc-get-lock-list gpc-var) (list buffer-a buffer-b)))))
 
 (ert-deftest gpc-unlock-test/no-lock ()
   (gpc-init gpc-var-gpc-unlock-test/no-lock
@@ -333,7 +333,7 @@
     (set-buffer buffer-b)
     (gpc-lock gpc-var)
     (gpc-unlock gpc-var)
-    (should (seq-set-equal-p (gpc-get-lock-list gpc-var) (list buffer-a)))))
+    (should (gpc-helper-seq-set-equal-p (gpc-get-lock-list gpc-var) (list buffer-a)))))
 
 (ert-deftest gpc-locked-p-test/no-lock ()
   (unintern "gpc-var" nil)
@@ -380,7 +380,7 @@
     (set-buffer buffer-a)
     (gpc-lock gpc-var)
     (gpc-lock-gc gpc-var)
-    (should (seq-set-equal-p (gpc-get-lock-list gpc-var) (list buffer-a)))))
+    (should (gpc-helper-seq-set-equal-p (gpc-get-lock-list gpc-var) (list buffer-a)))))
 
 (ert-deftest gpc-lock-gc-test/one-lock-on-a-killed-buffer ()
   (unintern "gpc-var" nil)
@@ -407,7 +407,7 @@
     (set-buffer buffer-b)
     (gpc-lock gpc-var)
     (gpc-lock-gc gpc-var)
-    (should (seq-set-equal-p (gpc-get-lock-list gpc-var) (list buffer-b)))))
+    (should (gpc-helper-seq-set-equal-p (gpc-get-lock-list gpc-var) (list buffer-b)))))
 
 (ert-deftest gpc-lock-clear-test/two-locks ()
   (unintern "gpc-var" nil)

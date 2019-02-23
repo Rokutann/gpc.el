@@ -257,5 +257,14 @@ this feature with non buffer-local variables make sense."
                (get ',cache 'gpc-locked-buffers))
        t nil))
 
+(defmacro gpc-copy (cache from-buffer to-buffer)
+  "Copy the content of CACHE from FROM-BUFFER to TO-BUFFER."
+  `(save-excursion
+     (let ((content nil))
+       (set-buffer ,from-buffer)
+       (setq content ,cache)
+       (set-buffer ,to-buffer)
+       (setq ,cache content))))
+
 (provide 'gpc)
 ;;; gpc.el ends here

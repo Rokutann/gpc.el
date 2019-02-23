@@ -432,6 +432,21 @@
     (gpc-lock gpc-var)
     (should (equal (gpc-fetch 'system gpc-var) "Hurd"))))
 
+(ert-deftest gpc-copy-test/happy-path ()
+  (unintern "gpc-var" nil)
+  (setq system-value (s-chop-suffix "\n" (shell-command-to-string "uname")))
+  (gpc-init gpc-var '((system "Hurd" (lambda ()
+                                       (s-chop-suffix "\n" (shell-command-to-string "uname"))))))
+  (with-temp-buffers (buffer-a buffer-b)
+    (set-buffer buffer-b)
+    (gpc-make-local-variable gpc-var)
+    (set-buffer buffer-a)
+    (gpc-make-local-variable gpc-var)
+    (gpc-fetch 'system gpc-var)
+    (gpc-copy gpc-var buffer-a buffer-b)
+    (set-buffer buffer-b)
+    (should (equal (gpc-val 'system gpc-var) system-value))))
+
 ;; Local Variables:
 ;; flycheck-disabled-checkers: (emacs-lisp-checkdoc)
 ;; End:

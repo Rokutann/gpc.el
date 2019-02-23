@@ -170,7 +170,11 @@ order."
   "Fetch the value of KEY in CACHE with its fetch function.
 
 It returns the value associated with KEY."
-  `(nalist-set ,key (funcall (gpc-spec-get-fetchfn ,key ,cache)) ,cache))
+  (let ((ekey (cl-gensym "key-")))
+    `(let ((,ekey ,key))
+       (if (gpc-locked-p ,cache)
+           (gpc-val ,ekey ,cache)
+         (nalist-set ,ekey (funcall (gpc-spec-get-fetchfn ,ekey ,cache)) ,cache)))))
 
 (defmacro gpc-fetch-all (cache)
   "Fetch values of all keys in the CACHE's spec."
@@ -206,6 +210,52 @@ It returns the value associated with KEY."
   "Pretty print and return the content of CACHE."
   (message (pp cache))
   cache)
+
+(defmacro gpc-lock (cache)
+  "Lock the values of CACHE in the current buffer.
+
+The gpc lock feature is originly intended to be used with
+buffer-local variables.  However, it doesn't check CACHE'
+buffer-locality since there might be some usage cases where using
+this feature with non buffer-local variables make sense."
+  `(progn
+     (gpc-lock-gc ,cache)
+     (let ((locked-bufs (get ',cache 'gpc-locked-buffers))
+           (buf (current-buffer)))
+       (unless (member buf locked-bufs)
+         (push buf locked-bufs)
+         (put ',cache 'gpc-locked-buffers locked-bufs)))))
+
+(defmacro gpc-unlock (cache)
+  "Unlock CACHE in the current buffer."
+  `(let ((locked-bufs (get ',cache 'gpc-locked-buffers))
+         (buf (current-buffer)))
+     (when (member buf locked-bufs)
+       (put ',cache 'gpc-locked-buffers (remove buf locked-bufs)))))
+
+(defmacro gpc-lock-clear (cache)
+  "Delete all buffers from the lock list of CACHE."
+  `(put ',cache 'gpc-locked-buffers nil))
+
+(defmacro gpc-lock-gc (cache)
+  "Remove killed buffers from the lock list of CACHE."
+  `(let ((locked-bufs (get ',cache 'gpc-locked-buffers))
+         (buf (current-buffer)))
+     (put ',cache 'gpc-locked-buffers (cl-remove-if-not 'buffer-live-p locked-bufs))))
+
+(defmacro gpc-lock-pp (cache)
+  "Pretty print the locked buffers for CACHE."
+  `(message (pp (get ',cache 'gpc-locked-buffers))))
+
+(defmacro gpc-get-lock-list (cache)
+  "Return the lock list of CACHE."
+  `(get ',cache 'gpc-locked-buffers))
+
+(defmacro gpc-locked-p (cache)
+  "Return t if CACHE is locked in the current buffer, otherwise nil."
+  `(if (member (current-buffer)
+               (get ',cache 'gpc-locked-buffers))
+       t nil))
 
 (provide 'gpc)
 ;;; gpc.el ends here

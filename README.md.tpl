@@ -30,6 +30,7 @@ See [nalist.el](https://github.com/mukuge/nalist.el) for the detail of the `nali
 * [gpc-fetch-all](#gpc-fetch-all-cache) `(cache)`
 * [gpc-get](#gpc-get-key-cache-key-force-nil) `(key cache &key (force nil))`
 * [gpc-set](#gpc-set)
+* [gpc-copy](#gpc-copy-cache-from-buffer-to-buffer) `(cache from-buffer to-buffer)`
 * [gpc-remove](#gpc-remove)
 * [gpc-clear](#gpc-clear)
 * [gpc-pairs](#gpc-pairs)
@@ -37,6 +38,16 @@ See [nalist.el](https://github.com/mukuge/nalist.el) for the detail of the `nali
 * [gpc-values](#gpc-values)
 * [gpc-pair-exist-p](#gpc-pair-exist-p-key-cache-key-testfn-eq) `(key cache &key (testfn 'eq))`
 * [gpc-pp](#gpc-pp-cache) `(cache)`
+
+### Cache Lock Functions
+
+* [gpc-lock](#gpc-lock-cache) `(cache)`
+* [gpc-unlock](#gpc-unlock-cache) `(cache)`
+* [gpc-get-lock-list](#gpc-get-lock-list-cache) `(cache)`
+* [gpc-lock-clear](#gpc-lock-clear-cache) `(cache)`
+* [gpc-lock-gc](#gpc-lock-gc-cache) `(cache)`
+* [gpc-lock-pp](#gpc-lock-pp-cache) `(cache)`
+* [gpc-locked-p](#gpc-locked-p-cache) `(cache)`
 
 ### Cache Spec Access Functions
 
@@ -157,6 +168,13 @@ This is an alias of `nalist-set`.
 ```lisp
 ```
 
+### gpc-copy `(cache from-buffer to-buffer)`
+
+{{gpc-copy}}
+
+```lisp
+```
+
 ### gpc-remove
 
 This is an alias of `nalist-remove`.
@@ -212,6 +230,55 @@ This is an alias of `nalist-values`.
 ### gpc-pp `(cache)`
 
 {{gpc-pp}}
+
+```lisp
+```
+
+### gpc-lock `(cache)`
+
+{{gpc-lock}}
+
+```lisp
+```
+
+### gpc-unlock `(cache)`
+
+{{gpc-unlock}}
+
+```lisp
+```
+
+### gpc-lock-clear `(cache)`
+
+{{gpc-lock-clear}}
+
+```lisp
+```
+
+### gpc-lock-gc `(cache)`
+
+{{gpc-lock-gc}}
+
+```lisp
+```
+
+### gpc-lock-pp `(cache)`
+
+{{gpc-lock-pp}}
+
+```lisp
+```
+
+### gpc-get-lock-list `(cache)`
+
+{{gpc-get-lock-list}}
+
+```lisp
+```
+
+### gpc-locked-p `(cache)`
+
+{{gpc-locked-p}}
 
 ```lisp
 ```

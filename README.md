@@ -30,6 +30,7 @@ See [nalist.el](https://github.com/mukuge/nalist.el) for the detail of the `nali
 * [gpc-fetch-all](#gpc-fetch-all-cache) `(cache)`
 * [gpc-get](#gpc-get-key-cache-key-force-nil) `(key cache &key (force nil))`
 * [gpc-set](#gpc-set)
+* [gpc-copy](#gpc-copy-cache-from-buffer-to-buffer) `(cache from-buffer to-buffer)`
 * [gpc-remove](#gpc-remove)
 * [gpc-clear](#gpc-clear)
 * [gpc-pairs](#gpc-pairs)
@@ -37,6 +38,16 @@ See [nalist.el](https://github.com/mukuge/nalist.el) for the detail of the `nali
 * [gpc-values](#gpc-values)
 * [gpc-pair-exist-p](#gpc-pair-exist-p-key-cache-key-testfn-eq) `(key cache &key (testfn 'eq))`
 * [gpc-pp](#gpc-pp-cache) `(cache)`
+
+### Cache Lock Functions
+
+* [gpc-lock](#gpc-lock-cache) `(cache)`
+* [gpc-unlock](#gpc-unlock-cache) `(cache)`
+* [gpc-get-lock-list](#gpc-get-lock-list-cache) `(cache)`
+* [gpc-lock-clear](#gpc-lock-clear-cache) `(cache)`
+* [gpc-lock-gc](#gpc-lock-gc-cache) `(cache)`
+* [gpc-lock-pp](#gpc-lock-pp-cache) `(cache)`
+* [gpc-locked-p](#gpc-locked-p-cache) `(cache)`
 
 ### Cache Spec Access Functions
 
@@ -215,6 +226,13 @@ It returns VALUE.
 ```lisp
 ```
 
+### gpc-copy `(cache from-buffer to-buffer)`
+
+Copy the content of CACHE from FROM-BUFFER to TO-BUFFER.
+
+```lisp
+```
+
 ### gpc-remove
 
 This is an alias of `nalist-remove`.
@@ -282,6 +300,60 @@ Return t if CACHE has an entry with KEY, otherwise nil.
 ### gpc-pp `(cache)`
 
 Pretty print and return the content of CACHE.
+
+```lisp
+```
+
+### gpc-lock `(cache)`
+
+Lock the values of CACHE in the current buffer.
+
+The gpc lock feature is originly intended to be used with
+buffer-local variables.  However, it doesn’t check CACHE’
+buffer-locality since there might be some usage cases where using
+this feature with non buffer-local variables make sense.
+
+```lisp
+```
+
+### gpc-unlock `(cache)`
+
+Unlock CACHE in the current buffer.
+
+```lisp
+```
+
+### gpc-lock-clear `(cache)`
+
+Delete all buffers from the lock list of CACHE.
+
+```lisp
+```
+
+### gpc-lock-gc `(cache)`
+
+Remove killed buffers from the lock list of CACHE.
+
+```lisp
+```
+
+### gpc-lock-pp `(cache)`
+
+Pretty print the locked buffers for CACHE.
+
+```lisp
+```
+
+### gpc-get-lock-list `(cache)`
+
+Return the lock list of CACHE.
+
+```lisp
+```
+
+### gpc-locked-p `(cache)`
+
+Return t if CACHE is locked in the current buffer, otherwise nil.
 
 ```lisp
 ```

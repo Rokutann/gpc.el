@@ -209,10 +209,13 @@ It uses fetchfn to get the value when FORCE is non-nil."
   cache)
 
 (defmacro gpc-lock (cache)
-  "Lock the values in CACHE.
+  "Lock the values in CACHE, and return the lock list of CACHE.
 
 After locking, `gpc-fetch' acts like `gpc-val'.  This gpc lock
-feature is intended to be used with buffer-local variables."
+feature is intended to be used with buffer-local variables.
+
+The lock list of CACHE contains the buffers where CACHE is
+locked."
   (let ((locked-bufs (cl-gensym "locked-bufs-")))
     `(progn
        (gpc-lock-gc ,cache)

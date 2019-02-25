@@ -91,7 +91,7 @@ list, (initval fetchfn), which specifies the initial value and
 fetch function of the cash entry.
 
 ```lisp
-(gpc-init acache
+(gpc-init cache
   '((buffer-size 0 (lambda ()
                      (buffer-size)))
     (uptime nil (lambda ()
@@ -102,7 +102,7 @@ fetch function of the cash entry.
               (call-process "curl" nil t nil "-sb" "-H" "Accept: text/plain" "https://icanhazdadjoke.com/")
               (s-chop-suffix "\n" (buffer-string)))))
     (buffer-memory 0 (lambda ()
-                       (* 8 (gpc-get 'buffer-size acache))))))
+                       (* 8 (gpc-get 'buffer-size cache))))))
 ```
 
 ### defcache `(name buffer-local doc-string &rest spec-list)`
@@ -121,6 +121,19 @@ SPEC-LIST defines the specification of the cache: the initial
 values and fetch functions.  See `gpc-init` for the detail.
 
 ```lisp
+(defcache cache :buffer-local
+  "An automatically buffer-local cache to show how to use `defcache'."
+  (buffer-size 0 (lambda ()
+                   (buffer-size)))
+  (uptime nil (lambda ()
+                (s-chop-suffix "\n" (shell-command-to-string "uptime"))))
+  (joke "How do you make holy water? You boil the hell out of it."
+        (lambda ()
+          (with-temp-buffer
+            (call-process "curl" nil t nil "-sb" "-H" "Accept: text/plain" "https://icanhazdadjoke.com/")
+            (s-chop-suffix "\n" (buffer-string)))))
+  (buffer-memory 0 (lambda ()
+                     (* 8 (gpc-get 'buffer-size cache)))))
 ```
 
 ### gpc-overwrite-with-initvals `(cache)`
@@ -128,6 +141,7 @@ values and fetch functions.  See `gpc-init` for the detail.
 Overwrite the whole cache content with initvals in the CACHE spec.
 
 ```lisp
+(gpc-overwrite-with-initvals cache) ;; => nil
 ```
 
 ### gpc-make-local-variable
@@ -143,6 +157,8 @@ cells.
 (fn NALIST)
 
 ```lisp
+(gpc-make-local-variable cache) ;; => cache
+;; Hereafter, cache is buffer-local in this buffer.
 ```
 
 ### gpc-make-variable-buffer-local
@@ -162,6 +178,8 @@ through it.
 (fn NALIST)
 
 ```lisp
+(gpc-make-local-variable cache) ;; => cache
+;; Hereafter, cache is automatically buffer-local.
 ```
 
 ### gpc-val
@@ -176,6 +194,7 @@ The key lookup is done with TESTFN if non-nil, otherwise with
 (fn KEY NALIST &key DEFAULT (TESTFN 'eq))
 
 ```lisp
+(gpc-val 'system cache) ;; => "Hurd"
 ```
 
 ### gpc-fetch `(key cache)`
@@ -185,6 +204,7 @@ Fetch the value of KEY in CACHE by calling its fetch function.
 It returns the fetched value.
 
 ```lisp
+(gpc-fetch 'system cache) ;; => "Darwin"
 ```
 
 ### gpc-fetch-all `(cache)`
@@ -192,6 +212,8 @@ It returns the fetched value.
 Fetch values for all keys in the CACHE spec.
 
 ```lisp
+(gpc-fetch-all cache) ;; => nil
+;; All the values of cache entries are filled by calling fetchfns.
 ```
 
 ### gpc-get `(key cache &key (force nil))`
@@ -203,6 +225,7 @@ It uses fetchfn to get the value when FORCE is non-nil.
 (fn KEY CACHE &key (FORCE nil))
 
 ```lisp
+(gpc-get 'buffer-size cache) ;; => 1256
 ```
 
 ### gpc-set
@@ -223,6 +246,8 @@ It returns VALUE.
 (fn KEY VALUE NALIST &key (TESTFN ''eq))
 
 ```lisp
+(gpc-set 'buffer-size 1000 cache) ;; => 1000
+
 ```
 
 ### gpc-copy `(cache from-buffer to-buffer)`
@@ -233,6 +258,11 @@ Use this function when CACHE is buffer-local or automatically
 buffer-local.
 
 ```lisp
+(gpc-copy cache parent-buffer (current-buffer))
+;; => ((buffer-memory . 5608)
+;;     (joke . "I couldn't get a reservation at the library. They were completely booked.")
+;;     (uptime . "21:51  up 16 days,  1:18, 4 users, load averages: 2.48 2.67 2.63")
+;;     (buffer-size . 701))
 ```
 
 ### gpc-remove
@@ -244,6 +274,7 @@ Remove the pair with KEY from NALIST if found with TESTFN.
 (fn KEY NALIST &key (TESTFN ''eq))
 
 ```lisp
+(gpc-remove 'buffer-size cache) ;; => 701
 ```
 
 ### gpc-clear
@@ -255,6 +286,7 @@ Set NALIST nil.
 (fn NALIST)
 
 ```lisp
+(gpc-clear cache) ;; => nil
 ```
 
 ### gpc-pairs
@@ -266,6 +298,11 @@ Return a list consisting all the pairs in NALIST.
 (fn NALIST)
 
 ```lisp
+(gpc-pairs cache)
+;; => ((buffer-memory . 6320)
+;;     (joke . "Why couldn't the kid see the pirate movie? Because it was rated arrr!")
+;;     (uptime . "21:56  up 16 days,  1:23, 4 users, load averages: 2.94 2.61 2.59")
+;;     (buffer-size . 790))
 ```
 
 ### gpc-keys
@@ -277,6 +314,7 @@ Return a list consisting all the keys in NALIST.
 (fn NALIST)
 
 ```lisp
+(gpc-keys cache) ;; => (buffer-memory joke uptime buffer-size)
 ```
 
 ### gpc-values
@@ -288,6 +326,10 @@ Return a list consisting all the values in NALIST.
 (fn NALIST)
 
 ```lisp
+(gpc-values cache)
+;; => (6320 "Why couldn't the kid see the pirate movie? Because it was rated arrr!"
+;;     "21:56 up 16 days, 1:23, 4 users, load averages: 2.94 2.61 2.59" 790)
+
 ```
 
 ### gpc-pair-exist-p `(key cache &key (testfn 'eq))`
@@ -297,6 +339,7 @@ Return t if CACHE has an entry with KEY, otherwise nil.
 (fn KEY CACHE &key (TESTFN 'eq))
 
 ```lisp
+(gpc-pair-exist-p 'buffer-size cache) ;; => 790
 ```
 
 ### gpc-pp `(cache)`
@@ -304,16 +347,26 @@ Return t if CACHE has an entry with KEY, otherwise nil.
 Pretty print and return the whole content of CACHE.
 
 ```lisp
+(gpc-pp cache)
+;; => ((buffer-memory . 6320)
+;;     (joke . "Why couldn't the kid see the pirate movie? Because it was rated arrr!")
+;;     (uptime . "21:56  up 16 days,  1:23, 4 users, load averages: 2.94 2.61 2.59")
+;;     (buffer-size . 790))
+;; Display this value in the mini-buffer.
 ```
 
 ### gpc-lock `(cache)`
 
-Lock the values in CACHE.
+Lock the values in CACHE, and return the lock list of CACHE.
 
 After locking, ‘gpc-fetch’ acts like ‘gpc-val’.  This gpc lock
 feature is intended to be used with buffer-local variables.
 
+The lock list of CACHE contains the buffers where CACHE is
+locked.
+
 ```lisp
+(gpc-lock cache) ;; => (#<buffer *scratch*>)
 ```
 
 ### gpc-unlock `(cache)`
@@ -321,6 +374,7 @@ feature is intended to be used with buffer-local variables.
 Unlock CACHE.
 
 ```lisp
+(gpc-unlock cache) ;; => nil
 ```
 
 ### gpc-lock-clear `(cache)`
@@ -328,6 +382,7 @@ Unlock CACHE.
 Set the lock list of CACHE nil.
 
 ```lisp
+(gpc-lock-clear cache) ;; => nil
 ```
 
 ### gpc-lock-gc `(cache)`
@@ -335,6 +390,7 @@ Set the lock list of CACHE nil.
 Remove killed buffers from the lock list of CACHE.
 
 ```lisp
+(gpc-lock-gc cache) ;; => (#<buffer *scratch*>)
 ```
 
 ### gpc-lock-pp `(cache)`
@@ -342,6 +398,8 @@ Remove killed buffers from the lock list of CACHE.
 Pretty print the locked buffers for CACHE.
 
 ```lisp
+(gpc-lock-pp cache)
+;; Display "(#<buffer *scratch*>)" in the mini-buffer.
 ```
 
 ### gpc-get-lock-list `(cache)`
@@ -349,6 +407,7 @@ Pretty print the locked buffers for CACHE.
 Return the lock list of CACHE.
 
 ```lisp
+(gpc-get-lock-list cache) ;; => (#<buffer *scratch*>)
 ```
 
 ### gpc-locked-p `(cache)`
@@ -356,6 +415,7 @@ Return the lock list of CACHE.
 Return t if CACHE is locked, otherwise nil.
 
 ```lisp
+(gpc-locked-p cache) ;; => t
 ```
 
 ### gpc-set-spec `(symbol hash-table)`
@@ -366,6 +426,19 @@ HASH-TABLE should contain a cache spec following the spec
 description format.  See ‘gpc-init’ for the detail.
 
 ```lisp
+(setq spec-alist '((buffer-size 0 (lambda ()
+                                    (buffer-size)))
+                   (uptime nil (lambda ()
+                                 (s-chop-suffix "\n" (shell-command-to-string "uptime"))))
+                   (joke "How do you make holy water? You boil the hell out of it."
+                         (lambda ()
+                           (with-temp-buffer
+                             (call-process "curl" nil t nil "-sb" "-H" "Accept: text/plain" "https://icanhazdadjoke.com/")
+                             (s-chop-suffix "\n" (buffer-string)))))
+                   (buffer-memory 0 (lambda ()
+                                      (* 8 (gpc-get 'buffer-size cache))))))
+(setq spec-ht (gpc-util-alist-to-hash spec-alist))
+(gpc-set-spec bcache spec-ht) ;; => #s(hash-table ...)
 ```
 
 ### gpc-get-spec `(cache)`
@@ -373,12 +446,14 @@ description format.  See ‘gpc-init’ for the detail.
 Return the spec of CACHE.
 
 ```lisp
+(gpc-get-spec cache) ;; => #s(hash-table ...)
 ```
 
 ### gpc-spec-set-entry `(key initval fetchfn cache)`
 Set the CACHE spec entry whose key is KEY to have the value (INITVAL FETCHFN).
 
 ```lisp
+(gpc-spec-set-entry 'buffer-momory-2 0 '(lambda () (* 16 (gpc-get 'buffer-size cache))) cache) ;; => (0 (lambda nil ...))
 ```
 
 ### gpc-spec-get-entry `(key cache)`
@@ -388,6 +463,7 @@ Return a CACHE spec entry with KEY if exists, otherwise nil.
 A CACHE spec entry is a list: (KEY initval fetchfn).
 
 ```lisp
+(gpc-spec-get-entry 'buffer-memory cache) ;; => (0 (lambda nil (* 8 (gpc-get ... cache))))
 ```
 
 ### gpc-spec-get-initval `(key cache)`
@@ -395,6 +471,7 @@ A CACHE spec entry is a list: (KEY initval fetchfn).
 Get the initval of the CACHE spec entry with KEY.
 
 ```lisp
+(gpc-spec-get-initval 'buffer-memory cache) ;; => 0
 ```
 
 ### gpc-spec-get-fetchfn `(key cache)`
@@ -402,6 +479,7 @@ Get the initval of the CACHE spec entry with KEY.
 Get the fetch function of the CACHE spec entry with KEY.
 
 ```lisp
+(gpc-spec-get-fetchfn 'buffer-memory cache) ;; => (lambda nil (* 8 (gpc-get (quote buffer-size) cache)))
 ```
 
 ### gpc-spec-map `(function cache)`
@@ -412,6 +490,13 @@ The function should have three arguments, which are filled by
 this macro with a key, its initval, and its fetchfn.
 
 ```lisp
+(gpc-spec-map #'(lambda (k v f) (message "%s: %s" k f))  cache)
+;; Write out these to *Message*.
+;; joke: (lambda nil (with-temp-buffer ... ))
+;; buffer-momory: (lambda nil (* 8 (gpc-get (quote buffer-size) cache)))
+;; buffer-momory-2: (lambda nil (* 16 (gpc-get (quote buffer-size) cache)))
+;; buffer-size: (lambda nil (buffer-size))
+;; uptime: (lambda nil (s-chop-suffix ...))
 ```
 
 ### gpc-spec-keyp `(key cache)`
@@ -419,6 +504,7 @@ this macro with a key, its initval, and its fetchfn.
 Return t if KEY is a key in the CACHE’s spec, otherwise nil.
 
 ```lisp
+(gpc-spec-keyp 'buffer-memory cache) ;; => t
 ```
 
 ### gpc-pp-spec (cache)
@@ -426,4 +512,12 @@ Return t if KEY is a key in the CACHE’s spec, otherwise nil.
 Pretty print the CACHE spec, and return it.
 
 ```lisp
+(gpc-pp-spec cache)
+;; => ((buffer-momory-2 0 (lambda nil (* 16 ...)))
+;;     (buffer-memory 0 (lambda nil (* 8 ...)))
+;;     (joke "How do you make holy water? You boil the hell out of it." (lambda nil (with-temp-buffer ... ...)))
+;;     (uptime nil (lambda nil (s-chop-suffix "
+;;     " ...)))
+;;     (buffer-size 0 (lambda nil (buffer-size))))
+;; Dispaly it in the mini-buffer as well.
 ```

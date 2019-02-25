@@ -67,7 +67,7 @@ See [the Github page](https://github.com/mukuge/nalist.el) for the detail of the
 
 ## Documentation and Examples
 
-### gpc-init `(symbol spec-list)`
+### gpc-init `(name spec-list)`
 
 {{gpc-init}}
 
@@ -86,7 +86,7 @@ See [the Github page](https://github.com/mukuge/nalist.el) for the detail of the
                        (* 8 (gpc-get 'buffer-size acache))))))
 ```
 
-### defcache `(symbol buffer-local doc-string &rest spec-list)`
+### defcache `(name buffer-local doc-string &rest spec-list)`
 
 Define NAME as a general purpose cache, and return a symbol.
 

@@ -5,7 +5,7 @@
 ;; Author: Cyriakus "Mukuge" Hill <cyriakus.h@gmail.com>
 ;; URL: https://github.com/mukuge/gpc.el
 ;; Keywords: lisp
-;; Package-Version: 0.0.1
+;; Package-Version: 0.1.1.d
 ;; Package-Requires: ((emacs "25.1"))
 
 ;; This program is free software; you can redistribute it and/or modify

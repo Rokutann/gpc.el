@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/mukuge/gpc.el.svg?branch=master)](https://travis-ci.org/mukuge/gpc.el)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
 # gpc.el
 
 A general purpose cache facility for Emacs. It's light weight and buffer-local safe.
@@ -11,7 +14,7 @@ your Emacs config:
 (require 'gpc)
 ```
 
-See [nalist.el](https://github.com/mukuge/nalist.el) for the detail of the `nalist` library.
+See [the Github page](https://github.com/mukuge/nalist.el) for the detail of the `nalist` library.
 
 ## API
 

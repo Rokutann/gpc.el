@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/mukuge/gpc.el.svg?branch=master)](https://travis-ci.org/mukuge/gpc.el)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
 # gpc.el
 
 A general purpose cache facility for Emacs. It's light weight and buffer-local safe.
@@ -11,7 +14,7 @@ your Emacs config:
 (require 'gpc)
 ```
 
-See [nalist.el](https://github.com/mukuge/nalist.el) for the detail of the `nalist` library.
+See [the Github page](https://github.com/mukuge/nalist.el) for the detail of the `nalist` library.
 
 ## API
 
@@ -66,29 +69,26 @@ See [nalist.el](https://github.com/mukuge/nalist.el) for the detail of the `nali
 
 ### gpc-init `(symbol spec-list)`
 
-Initialize SYMBOL as a general purpose cache with SPEC-LIST.
+Bind NAME to a general purpose cache specified in SPEC-LIST.
 
-A general purpose cache, or ‘gpc’, is a cache facility which
-enables you to store return values of fetch functions for future
-reuse.  It’s like memoization inside-out.
+General purpose cache, or ‘gpc’, is a cache facility which
+enables you to store return values of fetch functions in a
+variable for future reuse.
 
-A cache entity in ‘gpc’ is a data structure with a name, which
-utilizes symbol’s features to implement its mechanism between
-cache and its specification.
+‘gpc’ uses two places to store information: One is the ordinary
+variable binding , which keeps cached data, the other is the
+symbol’s property list, where the specification of the cache is
+kept with the key ‘gpc-cache-spec’.
 
-It uses two places to store information: One is the ordinary
-variable binding to the symbol, which keeps the content of cache,
-the other is the symbol’s property list, where the specification
-of cache is associated with the key ‘gpc-cache-spec’.
+Aside from the cache spec mechanism, a gpc cache is just a named
+association list, or ‘nalist’.  Some of its cache access
+functions is actually aliases to the corresponding functions in
+the ’nalist’ library.’
 
-As for the cache content, a gpc is just a named association list,
-or ‘nalist’.  Most of the cache access functions in ‘gpc’ is
-actually aliases to the corresponding functions in nalist.’
-
-A cache spec is a hash table whose keys are the keys of the cache
-content, and the value associated with each key is in the
-format (initval fetchfn), or a list of its initial value and
-fetch function.
+A cache spec is implemented as a hash table whose key is a key of
+a cache entry, and the value associated with each key is a
+list, (initval fetchfn), which specifies the initial value and
+fetch function of the cash entry.
 
 ```lisp
 (gpc-init acache
@@ -128,7 +128,7 @@ detail.
 
 ### gpc-overwrite-with-initvals `(cache)`
 
-Overwrite the cache content with initvals in the CACHE’s spec.
+Overwrite the whole cache content with initvals in the CACHE spec.
 
 ```lisp
 ```
@@ -183,16 +183,16 @@ The key lookup is done with TESTFN if non-nil, otherwise with
 
 ### gpc-fetch `(key cache)`
 
-Fetch the value of KEY in CACHE with its fetch function.
+Fetch the value of KEY in CACHE by calling its fetch function.
 
-It returns the value associated with KEY.
+It returns the fetched value.
 
 ```lisp
 ```
 
 ### gpc-fetch-all `(cache)`
 
-Fetch values of all keys in the CACHE’s spec.
+Fetch values for all keys in the CACHE spec.
 
 ```lisp
 ```
@@ -200,6 +200,8 @@ Fetch values of all keys in the CACHE’s spec.
 ### gpc-get `(key cache &key (force nil))`
 
 Return the value of KEY in CACHE by calling the fetchfn if needed.
+
+It uses fetchfn to get the value when FORCE is non-nil.
 
 (fn KEY CACHE &key (FORCE nil))
 
@@ -229,6 +231,9 @@ It returns VALUE.
 ### gpc-copy `(cache from-buffer to-buffer)`
 
 Copy the content of CACHE from FROM-BUFFER to TO-BUFFER.
+
+Use this function when CACHE is buffer-local or automatically
+buffer-local.
 
 ```lisp
 ```
@@ -299,33 +304,31 @@ Return t if CACHE has an entry with KEY, otherwise nil.
 
 ### gpc-pp `(cache)`
 
-Pretty print and return the content of CACHE.
+Pretty print and return the whole content of CACHE.
 
 ```lisp
 ```
 
 ### gpc-lock `(cache)`
 
-Lock the values of CACHE in the current buffer.
+Lock the values in CACHE.
 
-The gpc lock feature is originly intended to be used with
-buffer-local variables.  However, it doesn’t check CACHE’
-buffer-locality since there might be some usage cases where using
-this feature with non buffer-local variables make sense.
+After locking, ‘gpc-fetch’ acts like ‘gpc-val’.  This gpc lock
+feature is intended to be used with buffer-local variables.
 
 ```lisp
 ```
 
 ### gpc-unlock `(cache)`
 
-Unlock CACHE in the current buffer.
+Unlock CACHE.
 
 ```lisp
 ```
 
 ### gpc-lock-clear `(cache)`
 
-Delete all buffers from the lock list of CACHE.
+Set the lock list of CACHE nil.
 
 ```lisp
 ```
@@ -353,14 +356,14 @@ Return the lock list of CACHE.
 
 ### gpc-locked-p `(cache)`
 
-Return t if CACHE is locked in the current buffer, otherwise nil.
+Return t if CACHE is locked, otherwise nil.
 
 ```lisp
 ```
 
 ### gpc-set-spec `(symbol hash-table)`
 
-Set HASH-TABLE in SYMBOL’s plist as a cache spec.
+Set HASH-TABLE in SYMBOL’s property list as a cache spec.
 
 HASH-TABLE should contain a cache spec following the spec
 description format.  See ‘gpc-init’ for the detail.
@@ -372,45 +375,44 @@ description format.  See ‘gpc-init’ for the detail.
 
 Return the spec of CACHE.
 
-A cache spec is a hash table.
-
 ```lisp
 ```
 
 ### gpc-spec-set-entry `(key initval fetchfn cache)`
-Set the CACHE’s spec entry whose key is KEY to have the value (INITVAL FETCHFN).
+Set the CACHE spec entry whose key is KEY to have the value (INITVAL FETCHFN).
 
 ```lisp
 ```
 
 ### gpc-spec-get-entry `(key cache)`
 
-Return the entry with KEY if it’s in the CACHE’s spec, otherwise nil.
+Return a CACHE spec entry with KEY if exists, otherwise nil.
+
+A CACHE spec entry is a list: (KEY initval fetchfn).
 
 ```lisp
 ```
 
 ### gpc-spec-get-initval `(key cache)`
 
-Get the initval of the pair with KEY in the CACHE’s spec.
+Get the initval of the CACHE spec entry with KEY.
 
 ```lisp
 ```
 
 ### gpc-spec-get-fetchfn `(key cache)`
 
-Get the fetch function of the pair with KEY in the CACHE’s spec.
+Get the fetch function of the CACHE spec entry with KEY.
 
 ```lisp
 ```
 
 ### gpc-spec-map `(function cache)`
 
-Call FUNCTION for all keys and values of the CACHE’s spec.
+Call FUNCTION for all keys and values in CACHE.
 
 The function should have three arguments, which are filled by
-this macro with a key, its initval, and its fetchfn in this
-order.
+this macro with a key, its initval, and its fetchfn.
 
 ```lisp
 ```
@@ -424,7 +426,7 @@ Return t if KEY is a key in the CACHE’s spec, otherwise nil.
 
 ### gpc-pp-spec (cache)
 
-Pretty print the spec of CACHE, and return it.
+Pretty print the CACHE spec, and return it.
 
 ```lisp
 ```

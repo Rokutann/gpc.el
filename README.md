@@ -72,22 +72,22 @@ See [the Github page](https://github.com/mukuge/nalist.el) for the detail of the
 Bind NAME to a general purpose cache specified in SPEC-LIST.
 
 General purpose cache, or ‘gpc’, is a cache facility which
-enables you to store return values of fetch functions in a
-variable for future reuse.
+enables you to store return values of fetch functions under a
+NAME or a variable for future reuse.
 
 ‘gpc’ uses two places to store information: One is the ordinary
-variable binding , which keeps cached data, the other is the
+variable binding, which keeps cached data, the other is the
 symbol’s property list, where the specification of the cache is
 kept with the key ‘gpc-cache-spec’.
 
 Aside from the cache spec mechanism, a gpc cache is just a named
 association list, or ‘nalist’.  Some of its cache access
-functions is actually aliases to the corresponding functions in
-the ’nalist’ library.’
+functions are actually aliases to the corresponding functions in
+the ‘nalist’ library.’
 
-A cache spec is implemented as a hash table whose key is a key of
-a cache entry, and the value associated with each key is a
-list, (initval fetchfn), which specifies the initial value and
+A cache spec is implemented as a hash table whose key is the key
+of a cache entry, and the value associated with each key is a
+list or (initval fetchfn), which specifies the initial value and
 fetch function of the cash entry.
 
 ```lisp
@@ -420,7 +420,7 @@ Return t if CACHE is locked, otherwise nil.
 
 ### gpc-set-spec `(symbol hash-table)`
 
-Set HASH-TABLE in SYMBOL’s property list as a cache spec.
+Set HASH-TABLE in SYMBOL’s property list as its cache spec.
 
 HASH-TABLE should contain a cache spec following the spec
 description format.  See ‘gpc-init’ for the detail.

@@ -50,22 +50,22 @@
   "Bind NAME to a general purpose cache specified in SPEC-LIST.
 
 General purpose cache, or `gpc', is a cache facility which
-enables you to store return values of fetch functions in a
-variable for future reuse.
+enables you to store return values of fetch functions under a
+NAME or a variable for future reuse.
 
 `gpc' uses two places to store information: One is the ordinary
-variable binding , which keeps cached data, the other is the
+variable binding, which keeps cached data, the other is the
 symbol's property list, where the specification of the cache is
 kept with the key `gpc-cache-spec'.
 
 Aside from the cache spec mechanism, a gpc cache is just a named
 association list, or `nalist'.  Some of its cache access
-functions is actually aliases to the corresponding functions in
-the 'nalist' library.'
+functions are actually aliases to the corresponding functions in
+the `nalist' library.'
 
-A cache spec is implemented as a hash table whose key is a key of
-a cache entry, and the value associated with each key is a
-list, (initval fetchfn), which specifies the initial value and
+A cache spec is implemented as a hash table whose key is the key
+of a cache entry, and the value associated with each key is a
+list or (initval fetchfn), which specifies the initial value and
 fetch function of the cash entry."
   (declare (indent 1))
   `(prog1
@@ -83,17 +83,17 @@ fetch function of the cash entry."
             (gpc-get-spec ,cache)))
 
 (cl-defmacro defcache (name buffer-local doc-string &rest spec-list)
-  "Define NAME as a general purpose cache, and return a symbol.
+  "Define NAME as a general purpose cache, and return the symbol.
 
-This macro uses `defvar' internally, so the resulting symbol as a
-variable is special, and DOC-STRING is stored in the symbol's
-property list.
+This macro uses `defvar' internally so that the resulting symbol
+as a variable is special, and DOC-STRING is stored in the
+symbol's property list.
 
 The resulting variable is initialized as an automatically
 buffer-local variable if the value of BUFFER-LOCAL is
-:buffer-local. Otherwise, as a global variable.
+:buffer-local, otherwise, as a global variable.
 
-SPEC-LIST defines the specification of the cache: the initial
+SPEC-LIST defines the specification of the cache: its initial
 values and fetch functions.  See `gpc-init' for the detail."
   (declare (indent 2))
   `(prog1
@@ -106,7 +106,7 @@ values and fetch functions.  See `gpc-init' for the detail."
 ;; Cache spec access functions
 
 (defmacro gpc-set-spec (symbol hash-table)
-  "Set HASH-TABLE in SYMBOL's property list as a cache spec.
+  "Set HASH-TABLE in SYMBOL's property list as its cache spec.
 
 HASH-TABLE should contain a cache spec following the spec
 description format.  See `gpc-init' for the detail."

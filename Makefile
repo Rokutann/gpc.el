@@ -12,6 +12,9 @@ test: clean-elc
 unit:
 	${CASK} exec ert-runner
 
+pool:
+	${CASK} exec ert-runner test/gpc-pool-test.el
+
 docs:
 	${CASK} exec ${EMACS} -Q --script bin/docs.el
 

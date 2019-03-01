@@ -281,10 +281,11 @@ buffer-local."
   `(put ',cache ,poolname nil))
 
 (cl-defmacro gpc-pool-pushnew (value pool cache &key (test ''eql))
-  "Put a VALUE into the POOL of CACHE."
-  `(let ((pool-tmp (get ',cache ,pool)))
-     (cl-pushnew ,value pool-tmp :test ,test)
-     (put ',cache ,pool pool-tmp)))
+  "Put a VALUE into POOL of CACHE."
+  (let ((pool-tmp (cl-gensym "pool-map-")))
+    `(let ((,pool-tmp (get ',cache ,pool)))
+       (cl-pushnew ,value ,pool-tmp :test ,test)
+       (put ',cache ,pool ,pool-tmp))))
 
 (defmacro gpc-pool-clear (pool cache)
   "Clear all the data in POOL of CACHE."
@@ -296,36 +297,39 @@ buffer-local."
 
 (defmacro gpc-pool-map (function pool cache)
   "Call FUNCTION for all values in POOL of CACHE."
-  `(let ((pool-tmp (get ',cache ,pool)))
-     (mapc ,function pool-tmp)))
+  (let ((pool-tmp (cl-gensym "pool-map-")))
+    `(let ((,pool-tmp (get ',cache ,pool)))
+       (mapc ,function ,pool-tmp))))
 
 (cl-defmacro gpc-pool-member (value pool cache &key (test ''eql))
-  "Find the first occurrence of VALUE in POOL of CACHE..
+  "Find the first occurrence of VALUE in POOL of CACHE.
 Return the sublist of POOL whose car is VALUE.
 
 Keywords supported:  :test."
-  `(let ((pool-tmp (get ',cache ,pool)))
-     (cl-member ,value pool-tmp :test ,test)))
+  (let ((pool-tmp (cl-gensym "pool-map-")))
+    `(let ((,pool-tmp (get ',cache ,pool)))
+       (cl-member ,value ,pool-tmp :test ,test))))
 
 (defmacro gpc-pool-member-if (predicate pool cache)
   "Find the first item satisfying PREDICATE in POOL of CACHE.
 Return the sublist of POOL whose car matches."
-  `(let ((pool-tmp (get ',cache ,pool)))
-     (cl-member-if ,predicate  pool-tmp)))
+  (let ((pool-tmp (cl-gensym "pool-map-")))
+    `(let ((,pool-tmp (get ',cache ,pool)))
+       (cl-member-if ,predicate ,pool-tmp))))
 
 (cl-defmacro gpc-pool-delete (value pool cache &key (test ''eql))
-  "Find the first occurrence of VALUE in POOL of CACHE..
-Return the sublist of POOL whose car is VALUE.
+  "Delete the all occurrences of VALUE in POOL of CACHE.
 
 Keywords supported:  :test."
-  `(let ((pool-tmp (get ',cache ,pool)))
-     (put ',cache ,pool (cl-remove ,value pool-tmp :test ,test))))
+  (let ((pool-tmp (cl-gensym "pool-map-")))
+    `(let ((,pool-tmp (get ',cache ,pool)))
+       (put ',cache ,pool (cl-remove ,value ,pool-tmp :test ,test)))))
 
 (defmacro gpc-pool-delete-if (predicate pool cache)
-  "Find the first item satisfying PREDICATE in POOL of CACHE.
-Return the sublist of POOL whose car matches."
-  `(let ((pool-tmp (get ',cache ,pool)))
-     (put ',cache ,pool (cl-remove-if ,predicate pool-tmp))))
+  "Delete all item satisfying PREDICATE in POOL of CACHE."
+  (let ((pool-tmp (cl-gensym "pool-map-")))
+    `(let ((,pool-tmp (get ',cache ,pool)))
+       (put ',cache ,pool (cl-remove-if ,predicate ,pool-tmp)))))
 
 (provide 'gpc)
 ;;; gpc.el ends here

@@ -20,8 +20,8 @@
 
 (ert-deftest gpc-pool-pushnew/test-different ()
   (gpc-pool-init 'pipenv-virtualenvs npy-env)
-  (gpc-pool-pushnew "/usr/local/project1" 'pipenv-virtualenvs npy-env :test 'eq)
-  (gpc-pool-pushnew "/usr/local/project1" 'pipenv-virtualenvs npy-env :test 'eq)
+  (gpc-pool-pushnew "/usr/local/project1" 'pipenv-virtualenvs npy-env)
+  (gpc-pool-pushnew "/usr/local/project1" 'pipenv-virtualenvs npy-env)
   (should (equal (get 'npy-env 'pipenv-virtualenvs) '("/usr/local/project1" "/usr/local/project1"))))
 
 (ert-deftest gpc-pool-clear ()

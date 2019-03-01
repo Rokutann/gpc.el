@@ -280,7 +280,7 @@ buffer-local."
   "Initialize a gpc pool for CACHE with the name POOLNAME."
   `(put ',cache ,poolname nil))
 
-(cl-defmacro gpc-pool-pushnew (value pool cache &key (test 'eql))
+(cl-defmacro gpc-pool-pushnew (value pool cache &key (test ''eql))
   "Put a VALUE into the POOL of CACHE."
   `(let ((pool-tmp (get ',cache ,pool)))
      (cl-pushnew ,value pool-tmp :test ,test)
@@ -299,7 +299,7 @@ buffer-local."
   `(let ((pool-tmp (get ',cache ,pool)))
      (mapc ,function pool-tmp)))
 
-(cl-defmacro gpc-pool-member (value pool cache &key (test 'eql))
+(cl-defmacro gpc-pool-member (value pool cache &key (test ''eql))
   "Find the first occurrence of VALUE in POOL of CACHE..
 Return the sublist of POOL whose car is VALUE.
 
@@ -313,7 +313,7 @@ Return the sublist of POOL whose car matches."
   `(let ((pool-tmp (get ',cache ,pool)))
      (cl-member-if ,predicate  pool-tmp)))
 
-(cl-defmacro gpc-pool-delete (value pool cache &key (test 'eql))
+(cl-defmacro gpc-pool-delete (value pool cache &key (test ''eql))
   "Find the first occurrence of VALUE in POOL of CACHE..
 Return the sublist of POOL whose car is VALUE.
 

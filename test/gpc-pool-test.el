@@ -93,10 +93,34 @@
 (ert-deftest gpc-pool-member-if/exists ()
   (gpc-pool-init 'pipenv-virtualenvs npy-env)
   (gpc-pool-pushnew "/usr/local/project1" 'pipenv-virtualenvs npy-env :test 'equal)
-  (gpc-pool-pushnew "/usr/share/project2" 'pipenv-virtualenvs npy-env :test 'equal)
+  (gpc-pool-pushnew "/usr/local" 'pipenv-virtualenvs npy-env :test 'equal)
   (should (gpc-pool-member-if #'(lambda (x) (s-matches-p (concat "^" x)
                                                     "/usr/local/project1/foo.py"))
                               'pipenv-virtualenvs npy-env)))
+
+(ert-deftest gpc-pool-member-if/not-exists ()
+  (gpc-pool-init 'pipenv-virtualenvs npy-env)
+  (gpc-pool-pushnew "/usr/local/project1" 'pipenv-virtualenvs npy-env :test 'equal)
+  (gpc-pool-pushnew "/usr/share/project2" 'pipenv-virtualenvs npy-env :test 'equal)
+  (should-not (gpc-pool-member-if #'(lambda (x) (s-matches-p (concat "^" x)
+                                                        "/usr/local/project3/foo.py"))
+                                  'pipenv-virtualenvs npy-env)))
+
+(ert-deftest gpc-pool-member-if-not/exists ()
+  (gpc-pool-init 'pipenv-virtualenvs npy-env)
+  (gpc-pool-pushnew "/usr/local/project2" 'pipenv-virtualenvs npy-env :test 'equal)
+  (gpc-pool-pushnew "/usr/local/project3" 'pipenv-virtualenvs npy-env :test 'equal)
+  (should (gpc-pool-member-if-not #'(lambda (x) (s-matches-p (concat "^" x)
+                                                        "/usr/local/project1/foo.py"))
+                                  'pipenv-virtualenvs npy-env)))
+
+(ert-deftest gpc-pool-member-if-not/not-exists ()
+  (gpc-pool-init 'pipenv-virtualenvs npy-env)
+  (gpc-pool-pushnew "/usr/local" 'pipenv-virtualenvs npy-env :test 'equal)
+  (gpc-pool-pushnew "/usr" 'pipenv-virtualenvs npy-env :test 'equal)
+  (should-not (gpc-pool-member-if-not #'(lambda (x) (s-matches-p (concat "^" x)
+                                                            "/usr/local/project1/foo.py"))
+                                      'pipenv-virtualenvs npy-env)))
 
 (ert-deftest gpc-pool-delete/exists ()
   (gpc-pool-init 'pipenv-virtualenvs npy-env)
@@ -136,6 +160,18 @@
   (should (gpc-helper-seq-set-equal-p
            (gpc-pool-get-all 'pipenv-virtualenvs npy-env)
            '("/usr/local/project1" "/usr/share/project2"))))
+
+(ert-deftest gpc-pool-delete-if-not/exists ()
+  (gpc-pool-init 'pipenv-virtualenvs npy-env)
+  (gpc-pool-pushnew "/usr/local/project1" 'pipenv-virtualenvs npy-env :test 'equal)
+  (gpc-pool-pushnew "/usr/share/project2" 'pipenv-virtualenvs npy-env :test 'equal)
+  (gpc-pool-pushnew "/usr/local/project1/src" 'pipenv-virtualenvs npy-env :test 'equal)
+  (gpc-pool-pushnew "/usr/local/project1/doc" 'pipenv-virtualenvs npy-env :test 'equal)
+  (gpc-pool-delete-if-not #'(lambda (x) (s-matches-p "^/usr/local/project1" x))
+                          'pipenv-virtualenvs npy-env)
+  (should (gpc-helper-seq-set-equal-p
+           (gpc-pool-get-all 'pipenv-virtualenvs npy-env)
+           '("/usr/local/project1" "/usr/local/project1/src" "/usr/local/project1/doc"))))
 
 ;; Local Variables:
 ;; flycheck-disabled-checkers: (emacs-lisp-checkdoc)

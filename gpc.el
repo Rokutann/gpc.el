@@ -208,74 +208,6 @@ It uses fetchfn to get the value when FORCE is non-nil."
   (message (pp cache))
   cache)
 
-(defmacro gpc-lock (cache)
-  "Lock the values in CACHE, and return the lock list of CACHE.
-
-After locking, `gpc-fetch' acts like `gpc-val'.  This gpc lock
-feature is intended to be used with buffer-local variables.
-
-The lock list of CACHE contains the buffers where CACHE is
-locked."
-  (let ((locked-bufs (cl-gensym "locked-bufs-")))
-    `(progn
-       (gpc-lock-gc ,cache)
-       (let ((,locked-bufs (get ',cache 'gpc-locked-buffers))
-             (buf (current-buffer)))
-         (unless (member buf ,locked-bufs)
-           (push buf ,locked-bufs)
-           (put ',cache 'gpc-locked-buffers ,locked-bufs))))))
-
-(defmacro gpc-unlock (cache)
-  "Unlock CACHE."
-  (let ((locked-bufs (cl-gensym "locked-bufs-")))
-    `(let ((,locked-bufs (get ',cache 'gpc-locked-buffers))
-           (buf (current-buffer)))
-       (when (member buf ,locked-bufs)
-         (put ',cache 'gpc-locked-buffers (remove buf ,locked-bufs))))))
-
-(defmacro gpc-lock-clear (cache)
-  "Set the lock list of CACHE nil."
-  `(put ',cache 'gpc-locked-buffers nil))
-
-(defmacro gpc-lock-gc (cache)
-  "Remove killed buffers from the lock list of CACHE."
-  (let ((locked-bufs (cl-gensym "locked-bufs-")))
-    `(let ((,locked-bufs (get ',cache 'gpc-locked-buffers))
-           (buf (current-buffer)))
-       (put ',cache 'gpc-locked-buffers (cl-remove-if-not 'buffer-live-p ,locked-bufs)))))
-
-(defmacro gpc-lock-pp (cache)
-  "Pretty print the locked buffers for CACHE."
-  `(message (pp (get ',cache 'gpc-locked-buffers))))
-
-(defmacro gpc-get-lock-list (cache)
-  "Return the lock list of CACHE."
-  `(get ',cache 'gpc-locked-buffers))
-
-(defmacro gpc-locked-p (cache)
-  "Return t if CACHE is locked, otherwise nil."
-  `(if (member (current-buffer)
-               (get ',cache 'gpc-locked-buffers))
-       t nil))
-
-(defmacro gpc-copy (cache from-buffer to-buffer)
-  "Copy the content of CACHE from FROM-BUFFER to TO-BUFFER.
-
-Use this function when CACHE is buffer-local or automatically
-buffer-local."
-  (let ((efrom-buffer (cl-gensym "from-buffer-"))
-        (eto-buffer (cl-gensym "to-buffer-"))
-        (content (cl-gensym "content-")))
-    `(let ((,efrom-buffer ,from-buffer)
-           (,eto-buffer ,to-buffer)
-           (,content))
-       (save-excursion
-         (let ((content nil))
-           (set-buffer ,efrom-buffer)
-           (setq ,content (copy-alist ,cache))
-           (set-buffer ,eto-buffer)
-           (setq ,cache ,content))))))
-
 (defmacro gpc-pool-init (poolname cache)
   "Initialize a gpc pool for CACHE with the name POOLNAME."
   `(put ',cache ,poolname nil))
@@ -317,6 +249,13 @@ Return the sublist of POOL whose car matches."
     `(let ((,pool-tmp (get ',cache ,pool)))
        (cl-member-if ,predicate ,pool-tmp))))
 
+(defmacro gpc-pool-member-if-not (predicate pool cache)
+  "Find the first item satisfying PREDICATE in POOL of CACHE.
+Return the sublist of POOL whose car matches."
+  (let ((pool-tmp (cl-gensym "pool-map-")))
+    `(let ((,pool-tmp (get ',cache ,pool)))
+       (cl-member-if-not ,predicate ,pool-tmp))))
+
 (cl-defmacro gpc-pool-delete (value pool cache &key (test ''eql))
   "Delete the all occurrences of VALUE in POOL of CACHE.
 
@@ -330,6 +269,77 @@ Keywords supported:  :test."
   (let ((pool-tmp (cl-gensym "pool-map-")))
     `(let ((,pool-tmp (get ',cache ,pool)))
        (put ',cache ,pool (cl-remove-if ,predicate ,pool-tmp)))))
+
+(defmacro gpc-pool-delete-if-not (predicate pool cache)
+  "Delete all item not satisfying PREDICATE in POOL of CACHE."
+  (let ((pool-tmp (cl-gensym "pool-map-")))
+    `(let ((,pool-tmp (get ',cache ,pool)))
+       (put ',cache ,pool (cl-remove-if-not ,predicate ,pool-tmp)))))
+
+(defmacro gpc-lock (cache)
+  "Lock the values in CACHE, and return the lock list of CACHE.
+
+After locking, `gpc-fetch' acts like `gpc-val'.  This gpc lock
+feature is intended to be used with buffer-local variables.
+
+The lock list of CACHE contains the buffers where CACHE is
+locked."
+  `(progn
+     (gpc-lock-gc ,cache)
+     (gpc-pool-pushnew (current-buffer) 'gpc-locked-buffers ,cache)))
+
+(defmacro gpc-unlock (cache)
+  "Unlock CACHE."
+  `(gpc-pool-delete (current-buffer) 'gpc-locked-buffers ,cache))
+
+(defmacro gpc-lock-clear (cache)
+  "Set the lock list of CACHE nil."
+  `(gpc-pool-clear 'gpc-locked-buffers ,cache))
+
+(defmacro gpc-lock-gc (cache)
+  "Remove killed buffers from the lock list of CACHE."
+  `(gpc-pool-delete-if-not 'buffer-live-p 'gpc-locked-buffers ,cache))
+
+(defmacro gpc-lock-pp (cache)
+  "Pretty print the locked buffers for CACHE."
+  `(message (pp (get ',cache 'gpc-locked-buffers))))
+
+(defmacro gpc-lock-pp (cache)
+  "Pretty print the locked buffers for CACHE."
+  `(message (pp (gpc-pool-get-all 'gpc-locked-buffers ,cache))))
+
+(defmacro gpc-get-lock-list (cache)
+  "Return the lock list of CACHE."
+  `(gpc-pool-get-all 'gpc-locked-buffers ,cache))
+
+(defmacro gpc-locked-p (cache)
+  "Return t if CACHE is locked, otherwise nil."
+  `(if (member (current-buffer)
+               (get ',cache 'gpc-locked-buffers))
+       t nil))
+
+(defmacro gpc-locked-p (cache)
+  "Return t if CACHE is locked, otherwise nil."
+  `(if (gpc-pool-member (current-buffer) 'gpc-locked-buffers ,cache)
+       t nil))
+
+(defmacro gpc-copy (cache from-buffer to-buffer)
+  "Copy the content of CACHE from FROM-BUFFER to TO-BUFFER.
+
+Use this function when CACHE is buffer-local or automatically
+buffer-local."
+  (let ((efrom-buffer (cl-gensym "from-buffer-"))
+        (eto-buffer (cl-gensym "to-buffer-"))
+        (content (cl-gensym "content-")))
+    `(let ((,efrom-buffer ,from-buffer)
+           (,eto-buffer ,to-buffer)
+           (,content))
+       (save-excursion
+         (let ((content nil))
+           (set-buffer ,efrom-buffer)
+           (setq ,content (copy-alist ,cache))
+           (set-buffer ,eto-buffer)
+           (setq ,cache ,content))))))
 
 (provide 'gpc)
 ;;; gpc.el ends here

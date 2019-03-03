@@ -3,7 +3,7 @@
 
 # gpc.el
 
-A general purpose cache facility for Emacs. It's light weight and buffer-local safe.
+A general purpose cache facility for Emacs. It's lightweight and buffer-local safe.
 
 ## Installation
 

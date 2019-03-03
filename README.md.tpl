@@ -66,17 +66,18 @@ See [the Github page](https://github.com/mukuge/nalist.el) for the detail of the
 
 ### Pool functions
 * [gpc-pool-init](#gpc-pool-init-poolsymbol-cache) `(poolsymbol cache)`
-* [gpc-pool-pushnew]() `(value pool cache &key (test ''eql))`
+* [gpc-pool-pushnew](#gpc-pool-pushnew-value-pool-cache-key-test-eql) `(value pool cache &key (test ''eql))`
 * [gpc-pool-clear](#gpc-pool-clear-pool-cache) `(pool cache)`
 * [gpc-pool-set-all](#gpc-pool-set-all-value-list-pool-cache) `(value-list pool cache)`
 * [gpc-pool-get-all](#gpc-pool-get-all-pool-cache) `(pool cache)`
 * [gpc-pool-map](#gpc-pool-map-function-pool-cache) `(function pool cache)`
-* [gpc-pool-member](#gpc-pool-member) `(value pool cache &key (test ''eql))`
+* [gpc-pool-member](#gpc-pool-member-value-pool-cache-key-test-eql) `(value pool cache &key (test ''eql))`
 * [gpc-pool-member-if](#gpc-pool-member-if-predicate-pool-cache) `(predicate pool cache)`
 * [gpc-pool-member-if-not](#gpc-pool-member-if-not-predicate-pool-cache) `(predicate pool cache)`
-* [gpc-pool-delete](#) `(value pool cache &key (test ''eql))`
+* [gpc-pool-delete](#gpc-pool-delete-value-pool-cache-key-test-eql) `(value pool cache &key (test ''eql))`
 * [gpc-pool-delete-if](#gpc-pool-delete-if-predicate-pool-cache) `(predicate pool cache)`
 * [gpc-pool-delete-if-not](#gpc-pool-delete-if-not-predicate-pool-cache) `(predicate pool cache)`
+
 
 ## Documentation and Examples
 

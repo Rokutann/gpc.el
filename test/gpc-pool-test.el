@@ -37,6 +37,12 @@
   (should (gpc-helper-seq-set-equal-p (gpc-pool-get-all 'pipenv-virtualenvs npy-env)
                                       '("/usr/local/project1" "/usr/local/project2"))))
 
+(ert-deftest gpc-pool-set-all ()
+  (gpc-pool-init 'pipenv-virtualenvs npy-env)
+  (gpc-pool-set-all '(1 2 3 4) 'pipenv-virtualenvs npy-env)
+  (should (gpc-helper-seq-set-equal-p (gpc-pool-get-all 'pipenv-virtualenvs npy-env)
+                                      '(1 2 3 4))))
+
 (ert-deftest gpc-pool-map ()
   (gpc-pool-init 'pipenv-virtualenvs npy-env)
   (gpc-pool-pushnew "/usr/local/project1" 'pipenv-virtualenvs npy-env :test 'equal)

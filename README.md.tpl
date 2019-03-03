@@ -65,17 +65,18 @@ See [the Github page](https://github.com/mukuge/nalist.el) for the detail of the
 * [gpc-pp-spec](#gpc-pp-spec-cache) (cache)
 
 ### Pool functions
-* [gpc-pool-init](#gpc-pool-init) `(poolname cache)`
-* [gpc-pool-pushnew](#gpc-pool-pushnew) `(value pool cache &key (test ''eql))`
-* [gpc-pool-clear](#gpc-pool-clear) `(pool cache)`
-* [gpc-pool-get-all](#gpc-pool-get-all) `(pool cache)`
-* [gpc-pool-map](#gpc-pool-map) `(function pool cache)`
+* [gpc-pool-init](#gpc-pool-init-poolsymbol-cache) `(poolsymbol cache)`
+* [gpc-pool-pushnew]() `(value pool cache &key (test ''eql))`
+* [gpc-pool-clear](#gpc-pool-clear-pool-cache) `(pool cache)`
+* [gpc-pool-set-all](#gpc-pool-set-all-value-list-pool-cache) `(value-list pool cache)`
+* [gpc-pool-get-all](#gpc-pool-get-all-pool-cache) `(pool cache)`
+* [gpc-pool-map](#gpc-pool-map-function-pool-cache) `(function pool cache)`
 * [gpc-pool-member](#gpc-pool-member) `(value pool cache &key (test ''eql))`
-* [gpc-pool-member-if](#gpc-pool-member-if) `(predicate pool cache)`
-* [gpc-pool-member-if-not](#gpc-pool-member-if-not) `(predicate pool cache)`
-* [gpc-pool-delete](#gpc-pool-delete) `(value pool cache &key (test ''eql))`
-* [gpc-pool-delete-if](#gpc-pool-delete-if) `(predicate pool cache)`
-* [gpc-pool-delete-if-not](#gpc-pool-delete-if-not) `(predicate pool cache)`
+* [gpc-pool-member-if](#gpc-pool-member-if-predicate-pool-cache) `(predicate pool cache)`
+* [gpc-pool-member-if-not](#gpc-pool-member-if-not-predicate-pool-cache) `(predicate pool cache)`
+* [gpc-pool-delete](#) `(value pool cache &key (test ''eql))`
+* [gpc-pool-delete-if](#gpc-pool-delete-if-predicate-pool-cache) `(predicate pool cache)`
+* [gpc-pool-delete-if-not](#gpc-pool-delete-if-not-predicate-pool-cache) `(predicate pool cache)`
 
 ## Documentation and Examples
 
@@ -451,11 +452,12 @@ This is an alias of `nalist-values`.
 
 ## Pool Functions
 
-### gpc-pool-init `(poolname cache)`
+### gpc-pool-init `(poolsymbol cache)`
 
 {{gpc-pool-init}}
 
 ```lisp
+(gpc-pool-init 'ints cache) ;; => nil
 ```
 
 ### gpc-pool-pushnew `(value pool cache &key (test ''eql))`
@@ -463,6 +465,7 @@ This is an alias of `nalist-values`.
 {{gpc-pool-pushnew}}
 
 ```lisp
+(gpc-pool-pushnew 1 'ints cache) ;; => (1)
 ```
 
 ### gpc-pool-clear `(pool cache)`
@@ -470,6 +473,16 @@ This is an alias of `nalist-values`.
 {{gpc-pool-clear}}
 
 ```lisp
+(gpc-pool-clear 'ints cache) ;; => nil
+```
+
+
+### gpc-pool-set-all `(value-list pool cache)`
+
+{{gpc-pool-set-all}}
+
+```lisp
+(gpc-pool-set-all '(1 2 3 4 5) 'ints cache) ;; => (1 2 3 4 5)
 ```
 
 ### gpc-pool-get-all `(pool cache)`
@@ -477,6 +490,7 @@ This is an alias of `nalist-values`.
 {{gpc-pool-get-all}}
 
 ```lisp
+(gpc-pool-get-all 'ints cache) ;; => (1 2 3 4 5)
 ```
 
 ### gpc-pool-map `(function pool cache)`
@@ -484,6 +498,9 @@ This is an alias of `nalist-values`.
 {{gpc-pool-map}}
 
 ```lisp
+(let ((result 0))
+  (gpc-pool-map #'(lambda (n) (incf result n)) 'ints cache)
+  result) ;; => 15
 ```
 
 ### gpc-pool-member `(value pool cache &key (test ''eql))`
@@ -491,6 +508,7 @@ This is an alias of `nalist-values`.
 {{gpc-pool-member}}
 
 ```lisp
+(gpc-pool-member 3 'ints cache) ;; => (3 4 5)
 ```
 
 ### gpc-pool-member-if `(predicate pool cache)`
@@ -498,6 +516,7 @@ This is an alias of `nalist-values`.
 {{gpc-pool-member-if}}
 
 ```lisp
+(gpc-pool-member-if 'evenp 'ints cache) ;; => (2 3 4 5)
 ```
 
 ### gpc-pool-member-if-not `(predicate pool cache)`
@@ -505,6 +524,7 @@ This is an alias of `nalist-values`.
 {{gpc-pool-member-if-not}}
 
 ```lisp
+(gpc-pool-member-if-not 'oddp 'ints cache) ;; => (2 3 4 5)
 ```
 
 ### gpc-pool-delete `(value pool cache &key (test ''eql))`
@@ -512,6 +532,7 @@ This is an alias of `nalist-values`.
 {{gpc-pool-delete}}
 
 ```lisp
+(gpc-pool-delete 3 'ints cache) ;; => (1 2 4 5)
 ```
 
 ### gpc-pool-delete-if `(predicate pool cache)`
@@ -519,6 +540,7 @@ This is an alias of `nalist-values`.
 {{gpc-pool-delete-if}}
 
 ```lisp
+(gpc-pool-delete-if 'evenp 'ints cache) ;; => (1 5)
 ```
 
 ### gpc-pool-delete-if-not `(predicate pool cache)`
@@ -526,4 +548,5 @@ This is an alias of `nalist-values`.
 {{gpc-pool-delete-if-not}}
 
 ```lisp
+(gpc-pool-delete-if-not #'(lambda (n) (if (= 0 (mod n 5)) t nil)) 'ints cache) ;; => (5)
 ```

@@ -208,9 +208,12 @@ It uses fetchfn to get the value when FORCE is non-nil."
   (message (pp cache))
   cache)
 
-(defmacro gpc-pool-init (poolname cache)
-  "Initialize a gpc pool for CACHE with the name POOLNAME."
-  `(put ',cache ,poolname nil))
+(defmacro gpc-pool-init (poolsymbol cache)
+  "Initialize a gpc pool for CACHE with POOLSYMBOL.
+
+A pool in `gpc' is a list of values stored in the POOLSYMBOL
+property list."
+  `(put ',cache ,poolsymbol nil))
 
 (cl-defmacro gpc-pool-pushnew (value pool cache &key (test ''eql))
   "Put a VALUE into POOL of CACHE."
@@ -220,16 +223,24 @@ It uses fetchfn to get the value when FORCE is non-nil."
        (put ',cache ,pool ,pool-tmp))))
 
 (defmacro gpc-pool-clear (pool cache)
-  "Clear all the data in POOL of CACHE."
+  "Clear all values in POOL of CACHE."
   `(put ',cache ,pool nil))
 
 (defmacro gpc-pool-get-all (pool cache)
   "Get all values in POOL of CACHE."
   `(get ',cache ,pool))
 
+(defmacro gpc-pool-set-all (value-list pool cache)
+  "Replace the content of POOL of CACHE with VALUE-LIST.
+
+This function doesn't copy VALUE-LIST.  If you ned to avoid
+unintentional resouce sharing between cons cells, copy it
+beforehand."
+  `(put ',cache ,pool ,value-list))
+
 (defmacro gpc-pool-map (function pool cache)
   "Call FUNCTION for all values in POOL of CACHE."
-  (let ((pool-tmp (cl-gensym "pool-map-")))
+  (let ((pool-tmp (cl-gensym "pool-tmp-")))
     `(let ((,pool-tmp (get ',cache ,pool)))
        (mapc ,function ,pool-tmp))))
 
@@ -238,21 +249,21 @@ It uses fetchfn to get the value when FORCE is non-nil."
 Return the sublist of POOL whose car is VALUE.
 
 Keywords supported:  :test."
-  (let ((pool-tmp (cl-gensym "pool-map-")))
+  (let ((pool-tmp (cl-gensym "pool-tmp-")))
     `(let ((,pool-tmp (get ',cache ,pool)))
        (cl-member ,value ,pool-tmp :test ,test))))
 
 (defmacro gpc-pool-member-if (predicate pool cache)
   "Find the first item satisfying PREDICATE in POOL of CACHE.
 Return the sublist of POOL whose car matches."
-  (let ((pool-tmp (cl-gensym "pool-map-")))
+  (let ((pool-tmp (cl-gensym "pool-tmp-")))
     `(let ((,pool-tmp (get ',cache ,pool)))
        (cl-member-if ,predicate ,pool-tmp))))
 
 (defmacro gpc-pool-member-if-not (predicate pool cache)
   "Find the first item satisfying PREDICATE in POOL of CACHE.
 Return the sublist of POOL whose car matches."
-  (let ((pool-tmp (cl-gensym "pool-map-")))
+  (let ((pool-tmp (cl-gensym "pool-tmp-")))
     `(let ((,pool-tmp (get ',cache ,pool)))
        (cl-member-if-not ,predicate ,pool-tmp))))
 
@@ -260,19 +271,19 @@ Return the sublist of POOL whose car matches."
   "Delete the all occurrences of VALUE in POOL of CACHE.
 
 Keywords supported:  :test."
-  (let ((pool-tmp (cl-gensym "pool-map-")))
+  (let ((pool-tmp (cl-gensym "pool-tmp-")))
     `(let ((,pool-tmp (get ',cache ,pool)))
        (put ',cache ,pool (cl-remove ,value ,pool-tmp :test ,test)))))
 
 (defmacro gpc-pool-delete-if (predicate pool cache)
   "Delete all item satisfying PREDICATE in POOL of CACHE."
-  (let ((pool-tmp (cl-gensym "pool-map-")))
+  (let ((pool-tmp (cl-gensym "pool-tmp-")))
     `(let ((,pool-tmp (get ',cache ,pool)))
        (put ',cache ,pool (cl-remove-if ,predicate ,pool-tmp)))))
 
 (defmacro gpc-pool-delete-if-not (predicate pool cache)
   "Delete all item not satisfying PREDICATE in POOL of CACHE."
-  (let ((pool-tmp (cl-gensym "pool-map-")))
+  (let ((pool-tmp (cl-gensym "pool-tmp-")))
     `(let ((,pool-tmp (get ',cache ,pool)))
        (put ',cache ,pool (cl-remove-if-not ,predicate ,pool-tmp)))))
 

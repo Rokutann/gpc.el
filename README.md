@@ -65,17 +65,18 @@ See [the Github page](https://github.com/mukuge/nalist.el) for the detail of the
 * [gpc-pp-spec](#gpc-pp-spec-cache) (cache)
 
 ### Pool functions
-* [gpc-pool-init](#gpc-pool-init) `(poolname cache)`
-* [gpc-pool-pushnew](#gpc-pool-pushnew) `(value pool cache &key (test ''eql))`
-* [gpc-pool-clear](#gpc-pool-clear) `(pool cache)`
-* [gpc-pool-get-all](#gpc-pool-get-all) `(pool cache)`
-* [gpc-pool-map](#gpc-pool-map) `(function pool cache)`
+* [gpc-pool-init](#gpc-pool-init-poolsymbol-cache) `(poolsymbol cache)`
+* [gpc-pool-pushnew]() `(value pool cache &key (test ''eql))`
+* [gpc-pool-clear](#gpc-pool-clear-pool-cache) `(pool cache)`
+* [gpc-pool-set-all](#gpc-pool-set-all-value-list-pool-cache) `(value-list pool cache)`
+* [gpc-pool-get-all](#gpc-pool-get-all-pool-cache) `(pool cache)`
+* [gpc-pool-map](#gpc-pool-map-function-pool-cache) `(function pool cache)`
 * [gpc-pool-member](#gpc-pool-member) `(value pool cache &key (test ''eql))`
-* [gpc-pool-member-if](#gpc-pool-member-if) `(predicate pool cache)`
-* [gpc-pool-member-if-not](#gpc-pool-member-if-not) `(predicate pool cache)`
-* [gpc-pool-delete](#gpc-pool-delete) `(value pool cache &key (test ''eql))`
-* [gpc-pool-delete-if](#gpc-pool-delete-if) `(predicate pool cache)`
-* [gpc-pool-delete-if-not](#gpc-pool-delete-if-not) `(predicate pool cache)`
+* [gpc-pool-member-if](#gpc-pool-member-if-predicate-pool-cache) `(predicate pool cache)`
+* [gpc-pool-member-if-not](#gpc-pool-member-if-not-predicate-pool-cache) `(predicate pool cache)`
+* [gpc-pool-delete](#) `(value pool cache &key (test ''eql))`
+* [gpc-pool-delete-if](#gpc-pool-delete-if-predicate-pool-cache) `(predicate pool cache)`
+* [gpc-pool-delete-if-not](#gpc-pool-delete-if-not-predicate-pool-cache) `(predicate pool cache)`
 
 ## Documentation and Examples
 
@@ -537,11 +538,15 @@ Pretty print the CACHE spec, and return it.
 
 ## Pool Functions
 
-### gpc-pool-init `(poolname cache)`
+### gpc-pool-init `(poolsymbol cache)`
 
-Initialize a gpc pool for CACHE with the name POOLNAME.
+Initialize a gpc pool for CACHE with POOLSYMBOL.
+
+A pool in ‘gpc’ is a list of values stored in the POOLSYMBOL
+property list.
 
 ```lisp
+(gpc-pool-init 'ints cache) ;; => nil
 ```
 
 ### gpc-pool-pushnew `(value pool cache &key (test ''eql))`
@@ -551,13 +556,28 @@ Put a VALUE into POOL of CACHE.
 (fn VALUE POOL CACHE &key (TEST ''eql))
 
 ```lisp
+(gpc-pool-pushnew 1 'ints cache) ;; => (1)
 ```
 
 ### gpc-pool-clear `(pool cache)`
 
-Clear all the data in POOL of CACHE.
+Clear all values in POOL of CACHE.
 
 ```lisp
+(gpc-pool-clear 'ints cache) ;; => nil
+```
+
+
+### gpc-pool-set-all `(value-list pool cache)`
+
+Replace the content of POOL of CACHE with VALUE-LIST.
+
+This function doesn’t copy VALUE-LIST.  If you ned to avoid
+unintentional resouce sharing between cons cells, copy it
+beforehand.
+
+```lisp
+(gpc-pool-set-all '(1 2 3 4 5) 'ints cache) ;; => (1 2 3 4 5)
 ```
 
 ### gpc-pool-get-all `(pool cache)`
@@ -565,6 +585,7 @@ Clear all the data in POOL of CACHE.
 Get all values in POOL of CACHE.
 
 ```lisp
+(gpc-pool-get-all 'ints cache) ;; => (1 2 3 4 5)
 ```
 
 ### gpc-pool-map `(function pool cache)`
@@ -572,6 +593,9 @@ Get all values in POOL of CACHE.
 Call FUNCTION for all values in POOL of CACHE.
 
 ```lisp
+(let ((result 0))
+  (gpc-pool-map #'(lambda (n) (incf result n)) 'ints cache)
+  result) ;; => 15
 ```
 
 ### gpc-pool-member `(value pool cache &key (test ''eql))`
@@ -584,6 +608,7 @@ Keywords supported:  :test.
 (fn VALUE POOL CACHE &key (TEST ''eql))
 
 ```lisp
+(gpc-pool-member 3 'ints cache) ;; => (3 4 5)
 ```
 
 ### gpc-pool-member-if `(predicate pool cache)`
@@ -592,6 +617,7 @@ Find the first item satisfying PREDICATE in POOL of CACHE.
 Return the sublist of POOL whose car matches.
 
 ```lisp
+(gpc-pool-member-if 'evenp 'ints cache) ;; => (2 3 4 5)
 ```
 
 ### gpc-pool-member-if-not `(predicate pool cache)`
@@ -600,6 +626,7 @@ Find the first item satisfying PREDICATE in POOL of CACHE.
 Return the sublist of POOL whose car matches.
 
 ```lisp
+(gpc-pool-member-if-not 'oddp 'ints cache) ;; => (2 3 4 5)
 ```
 
 ### gpc-pool-delete `(value pool cache &key (test ''eql))`
@@ -611,6 +638,7 @@ Keywords supported:  :test.
 (fn VALUE POOL CACHE &key (TEST ''eql))
 
 ```lisp
+(gpc-pool-delete 3 'ints cache) ;; => (1 2 4 5)
 ```
 
 ### gpc-pool-delete-if `(predicate pool cache)`
@@ -618,6 +646,7 @@ Keywords supported:  :test.
 Delete all item satisfying PREDICATE in POOL of CACHE.
 
 ```lisp
+(gpc-pool-delete-if 'evenp 'ints cache) ;; => (1 5)
 ```
 
 ### gpc-pool-delete-if-not `(predicate pool cache)`
@@ -625,4 +654,5 @@ Delete all item satisfying PREDICATE in POOL of CACHE.
 Delete all item not satisfying PREDICATE in POOL of CACHE.
 
 ```lisp
+(gpc-pool-delete-if-not #'(lambda (n) (if (= 0 (mod n 5)) t nil)) 'ints cache) ;; => (5)
 ```

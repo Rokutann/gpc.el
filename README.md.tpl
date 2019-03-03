@@ -64,6 +64,18 @@ See [the Github page](https://github.com/mukuge/nalist.el) for the detail of the
 * [gpc-spec-keyp](#gpc-spec-keyp-key-cache) `(key cache)`
 * [gpc-pp-spec](#gpc-pp-spec-cache) (cache)
 
+### Pool functions
+* [gpc-pool-init](#gpc-pool-init) `(poolname cache)`
+* [gpc-pool-pushnew](#gpc-pool-pushnew) `(value pool cache &key (test ''eql))`
+* [gpc-pool-clear](#gpc-pool-clear) `(pool cache)`
+* [gpc-pool-get-all](#gpc-pool-get-all) `(pool cache)`
+* [gpc-pool-map](#gpc-pool-map) `(function pool cache)`
+* [gpc-pool-member](#gpc-pool-member) `(value pool cache &key (test ''eql))`
+* [gpc-pool-member-if](#gpc-pool-member-if) `(predicate pool cache)`
+* [gpc-pool-member-if-not](#gpc-pool-member-if-not) `(predicate pool cache)`
+* [gpc-pool-delete](#gpc-pool-delete) `(value pool cache &key (test ''eql))`
+* [gpc-pool-delete-if](#gpc-pool-delete-if) `(predicate pool cache)`
+* [gpc-pool-delete-if-not](#gpc-pool-delete-if-not) `(predicate pool cache)`
 
 ## Documentation and Examples
 
@@ -434,4 +446,84 @@ This is an alias of `nalist-values`.
 ;;     " ...)))
 ;;     (buffer-size 0 (lambda nil (buffer-size))))
 ;; Dispaly it in the mini-buffer as well.
+```
+
+
+## Pool Functions
+
+### gpc-pool-init `(poolname cache)`
+
+{{gpc-pool-init}}
+
+```lisp
+```
+
+### gpc-pool-pushnew `(value pool cache &key (test ''eql))`
+
+{{gpc-pool-pushnew}}
+
+```lisp
+```
+
+### gpc-pool-clear `(pool cache)`
+
+{{gpc-pool-clear}}
+
+```lisp
+```
+
+### gpc-pool-get-all `(pool cache)`
+
+{{gpc-pool-get-all}}
+
+```lisp
+```
+
+### gpc-pool-map `(function pool cache)`
+
+{{gpc-pool-map}}
+
+```lisp
+```
+
+### gpc-pool-member `(value pool cache &key (test ''eql))`
+
+{{gpc-pool-member}}
+
+```lisp
+```
+
+### gpc-pool-member-if `(predicate pool cache)`
+
+{{gpc-pool-member-if}}
+
+```lisp
+```
+
+### gpc-pool-member-if-not `(predicate pool cache)`
+
+{{gpc-pool-member-if-not}}
+
+```lisp
+```
+
+### gpc-pool-delete `(value pool cache &key (test ''eql))`
+
+{{gpc-pool-delete}}
+
+```lisp
+```
+
+### gpc-pool-delete-if `(predicate pool cache)`
+
+{{gpc-pool-delete-if}}
+
+```lisp
+```
+
+### gpc-pool-delete-if-not `(predicate pool cache)`
+
+{{gpc-pool-delete-if-not}}
+
+```lisp
 ```

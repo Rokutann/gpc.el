@@ -64,6 +64,18 @@ See [the Github page](https://github.com/mukuge/nalist.el) for the detail of the
 * [gpc-spec-keyp](#gpc-spec-keyp-key-cache) `(key cache)`
 * [gpc-pp-spec](#gpc-pp-spec-cache) (cache)
 
+### Pool functions
+* [gpc-pool-init](#gpc-pool-init) `(poolname cache)`
+* [gpc-pool-pushnew](#gpc-pool-pushnew) `(value pool cache &key (test ''eql))`
+* [gpc-pool-clear](#gpc-pool-clear) `(pool cache)`
+* [gpc-pool-get-all](#gpc-pool-get-all) `(pool cache)`
+* [gpc-pool-map](#gpc-pool-map) `(function pool cache)`
+* [gpc-pool-member](#gpc-pool-member) `(value pool cache &key (test ''eql))`
+* [gpc-pool-member-if](#gpc-pool-member-if) `(predicate pool cache)`
+* [gpc-pool-member-if-not](#gpc-pool-member-if-not) `(predicate pool cache)`
+* [gpc-pool-delete](#gpc-pool-delete) `(value pool cache &key (test ''eql))`
+* [gpc-pool-delete-if](#gpc-pool-delete-if) `(predicate pool cache)`
+* [gpc-pool-delete-if-not](#gpc-pool-delete-if-not) `(predicate pool cache)`
 
 ## Documentation and Examples
 
@@ -520,4 +532,97 @@ Pretty print the CACHE spec, and return it.
 ;;     " ...)))
 ;;     (buffer-size 0 (lambda nil (buffer-size))))
 ;; Dispaly it in the mini-buffer as well.
+```
+
+
+## Pool Functions
+
+### gpc-pool-init `(poolname cache)`
+
+Initialize a gpc pool for CACHE with the name POOLNAME.
+
+```lisp
+```
+
+### gpc-pool-pushnew `(value pool cache &key (test ''eql))`
+
+Put a VALUE into POOL of CACHE.
+
+(fn VALUE POOL CACHE &key (TEST ''eql))
+
+```lisp
+```
+
+### gpc-pool-clear `(pool cache)`
+
+Clear all the data in POOL of CACHE.
+
+```lisp
+```
+
+### gpc-pool-get-all `(pool cache)`
+
+Get all values in POOL of CACHE.
+
+```lisp
+```
+
+### gpc-pool-map `(function pool cache)`
+
+Call FUNCTION for all values in POOL of CACHE.
+
+```lisp
+```
+
+### gpc-pool-member `(value pool cache &key (test ''eql))`
+
+Find the first occurrence of VALUE in POOL of CACHE.
+Return the sublist of POOL whose car is VALUE.
+
+Keywords supported:  :test.
+
+(fn VALUE POOL CACHE &key (TEST ''eql))
+
+```lisp
+```
+
+### gpc-pool-member-if `(predicate pool cache)`
+
+Find the first item satisfying PREDICATE in POOL of CACHE.
+Return the sublist of POOL whose car matches.
+
+```lisp
+```
+
+### gpc-pool-member-if-not `(predicate pool cache)`
+
+Find the first item satisfying PREDICATE in POOL of CACHE.
+Return the sublist of POOL whose car matches.
+
+```lisp
+```
+
+### gpc-pool-delete `(value pool cache &key (test ''eql))`
+
+Delete the all occurrences of VALUE in POOL of CACHE.
+
+Keywords supported:  :test.
+
+(fn VALUE POOL CACHE &key (TEST ''eql))
+
+```lisp
+```
+
+### gpc-pool-delete-if `(predicate pool cache)`
+
+Delete all item satisfying PREDICATE in POOL of CACHE.
+
+```lisp
+```
+
+### gpc-pool-delete-if-not `(predicate pool cache)`
+
+Delete all item not satisfying PREDICATE in POOL of CACHE.
+
+```lisp
 ```

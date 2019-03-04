@@ -83,26 +83,25 @@ See [the Github page](https://github.com/mukuge/nalist.el) for the detail of the
 
 ### gpc-init `(name spec-list)`
 
-Bind NAME to a general purpose cache specified in SPEC-LIST.
+Bind NAME to a general purpose cache specified by SPEC-LIST.
 
-General purpose cache, or ‘gpc’, is a cache facility which
-enables you to store return values of fetch functions under a
-NAME or a variable for future reuse.
+General purpose cache, or ‘gpc’, is a cache facility which stores
+return values of fetch functions under a single NAME or variable.
 
-‘gpc’ uses two places to store information: One is the ordinary
+‘gpc’ uses two places to store information: One is its ordinary
 variable binding, which keeps cached data, the other is the
-symbol’s property list, where the specification of the cache is
-kept with the key ‘gpc-cache-spec’.
+symbol’s property list with the key ‘gpc-cache-spec’, where the
+specification of the cache is kept.
 
 Aside from the cache spec mechanism, a gpc cache is just a named
 association list, or ‘nalist’.  Some of its cache access
 functions are actually aliases to the corresponding functions in
 the ‘nalist’ library.’
 
-A cache spec is implemented as a hash table whose key is the key
-of a cache entry, and the value associated with each key is a
-list or (initval fetchfn), which specifies the initial value and
-fetch function of the cash entry.
+A cache spec is implemented as a hash table whose key corresponds
+to the key of a cache entry one-to-one, and the value associated
+with each key is a list, (initval fetchfn), which specifies the
+initial value and fetch function of the cash entry.
 
 ```lisp
 (gpc-init cache
